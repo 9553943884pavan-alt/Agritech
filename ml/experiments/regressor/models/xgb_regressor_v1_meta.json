@@ -1,0 +1,154 @@
+{
+  "model_type": "XGBRegressor",
+  "version": "v1",
+  "feature_cols": [
+    "crop_enc",
+    "state_enc",
+    "season_enc",
+    "log_area",
+    "crop_mean_yield"
+  ],
+  "known_crops": [
+    "rice",
+    "maize",
+    "chickpea",
+    "kidneybeans",
+    "pigeonpeas",
+    "mothbeans",
+    "mungbean",
+    "blackgram",
+    "lentil",
+    "pomegranate",
+    "banana",
+    "mango",
+    "grapes",
+    "watermelon",
+    "muskmelon",
+    "apple",
+    "orange",
+    "papaya",
+    "coconut",
+    "cotton",
+    "jute",
+    "coffee"
+  ],
+  "holdout_r2": 0.7274,
+  "holdout_rmse": 307.4778,
+  "holdout_mae": 29.3294,
+  "holdout_mape": 1241.3499755859375,
+  "cv_r2_mean": 0.7047,
+  "cv_r2_std": 0.0431,
+  "random_state": 42,
+  "train_rows": 52912,
+  "test_rows": 13229,
+  "per_crop_r2": [
+    {
+      "crop": "rice",
+      "r2": -27.34,
+      "rmse": 5.234,
+      "n": 3001
+    },
+    {
+      "crop": "maize",
+      "r2": 0.846,
+      "rmse": 11.106,
+      "n": 2791
+    },
+    {
+      "crop": "chickpea",
+      "r2": -346.462,
+      "rmse": 7.012,
+      "n": 1476
+    },
+    {
+      "crop": "pigeonpeas",
+      "r2": -220.171,
+      "rmse": 6.408,
+      "n": 1496
+    },
+    {
+      "crop": "mothbeans",
+      "r2": -3.943,
+      "rmse": 0.551,
+      "n": 150
+    },
+    {
+      "crop": "mungbean",
+      "r2": -122.559,
+      "rmse": 2.743,
+      "n": 1968
+    },
+    {
+      "crop": "blackgram",
+      "r2": -1898.524,
+      "rmse": 6.57,
+      "n": 17
+    },
+    {
+      "crop": "lentil",
+      "r2": -0.676,
+      "rmse": 0.121,
+      "n": 9
+    },
+    {
+      "crop": "pomegranate",
+      "r2": -3.622,
+      "rmse": 3.747,
+      "n": 6
+    },
+    {
+      "crop": "banana",
+      "r2": -2.252,
+      "rmse": 34.473,
+      "n": 587
+    },
+    {
+      "crop": "mango",
+      "r2": -122.533,
+      "rmse": 31.611,
+      "n": 71
+    },
+    {
+      "crop": "grapes",
+      "r2": -5.934,
+      "rmse": 17.384,
+      "n": 18
+    },
+    {
+      "crop": "muskmelon",
+      "r2": -69.202,
+      "rmse": 37.64,
+      "n": 27
+    },
+    {
+      "crop": "orange",
+      "r2": -67.1,
+      "rmse": 37.225,
+      "n": 60
+    },
+    {
+      "crop": "papaya",
+      "r2": -1.047,
+      "rmse": 53.267,
+      "n": 86
+    },
+    {
+      "crop": "coconut",
+      "r2": 0.609,
+      "rmse": 1925.088,
+      "n": 337
+    },
+    {
+      "crop": "cotton",
+      "r2": 0.295,
+      "rmse": 9.528,
+      "n": 832
+    },
+    {
+      "crop": "jute",
+      "r2": 0.554,
+      "rmse": 3.039,
+      "n": 293
+    }
+  ]
+}

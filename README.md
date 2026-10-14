@@ -4,11 +4,12 @@
 ---
 
 ## Slide 1: Team Name & Details
-* **Team Name:** AG_07_The_King
-* **Team Leader Name:** [Insert Name]
-* **Team Leader Mobile Number:** [Insert Number]
-* **Team Leader Email:** [Insert Email]
-* **College Name:** [Insert College Name]
+* **Team ID:** AG_07
+* **Team Name:** The_King
+* **Team Leader Name:** Not provided
+* **Team Leader Mobile Number:** 9849820952
+* **Team Leader Email:** iec2025049@iiita.ac.in
+* **College Name:** IIIT Allahabad
 
 ---
 
