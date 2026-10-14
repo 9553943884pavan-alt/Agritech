@@ -97,9 +97,9 @@ if __name__ == "__main__":
     print("Testing Live API Crop (Cotton):")
     # Let's pretend the AI predicts Cotton will yield 2 Tonnes per Hectare
     rev_cotton = calculate_revenue_per_acre("cotton", 2.0)
-    print(f"Revenue for 1 Acre of Cotton: ₹{rev_cotton:,.2f}\n")
+    print(f"Revenue for 1 Acre of Cotton: Rs. {rev_cotton:,.2f}\n")
     
     print("Testing Internet Hardcoded Crop (Apple):")
     # Let's pretend the AI predicts Apples will yield 15 Tonnes per Hectare
     rev_apple = calculate_revenue_per_acre("apple", 15.0)
-    print(f"Revenue for 1 Acre of Apple: ₹{rev_apple:,.2f}")
+    print(f"Revenue for 1 Acre of Apple: Rs. {rev_apple:,.2f}")

@@ -1,12 +1,25 @@
-# Backend
+# Virtual Environments
+venv/
+.venv/
+env/
 backend/venv/
+ml/venv/
+
+# Python Cache
+__pycache__/
 backend/__pycache__/
-*.pyc
+ml/**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
 
 # Frontend
 frontend/node_modules/
 frontend/dist/
 .DS_Store
+Thumbs.db
 
 # Datasets (If you don't want to upload heavy CSV files, uncomment below)
 # *.csv

@@ -1,9 +1,16 @@
+from pathlib import Path
 import pandas as pd
 import numpy as np
 
+# Resolve directories relative to this script
+SCRIPT_DIR = Path(__file__).resolve().parent
+DATA_DIR = SCRIPT_DIR.parents[1] / 'data'
+RAW_DIR = DATA_DIR / 'raw'
+PROCESSED_DIR = DATA_DIR / 'processed'
+
 print("Loading datasets...")
-df1 = pd.read_csv('Crop_recommendation.csv')
-df2 = pd.read_csv('crop_production.csv')
+df1 = pd.read_csv(RAW_DIR / 'Crop_recommendation.csv')
+df2 = pd.read_csv(RAW_DIR / 'crop_production.csv')
 
 # Create a reverse mapping dictionary (Dataset 2 Official Name -> Dataset 1 Standard Name)
 # Note: we use lowercase for matching
@@ -51,11 +58,12 @@ df2_filtered = df2_filtered.drop(columns=['Crop_clean', 'Crop'])
 df2_filtered = df2_filtered.rename(columns={'Standard_Crop': 'Crop'})
 
 # Save the pristine dataset!
-output_filename = 'Cleaned_crop_production.csv'
-df2_filtered.to_csv(output_filename, index=False)
+PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+output_path = PROCESSED_DIR / 'Cleaned_crop_production.csv'
+df2_filtered.to_csv(output_path, index=False)
 
 print("-" * 30)
-print(f"✅ Success! Cleaned dataset saved as: {output_filename}")
+print(f"[SUCCESS] Cleaned dataset saved as: {output_path}")
 print(f"Total rows remaining: {len(df2_filtered)}")
 print(f"Number of Unique Crops: {df2_filtered['Crop'].nunique()} (Target was 22)")
 print("Preview of the new dataset:")

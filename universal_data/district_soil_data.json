@@ -1,0 +1,74 @@
+{
+  "nizamabad": {
+    "nitrogen": 85,
+    "phosphorus": 42,
+    "potassium": 40,
+    "ph": 6.8
+  },
+  "hyderabad": {
+    "nitrogen": 70,
+    "phosphorus": 35,
+    "potassium": 30,
+    "ph": 7.1
+  },
+  "pune": {
+    "nitrogen": 60,
+    "phosphorus": 50,
+    "potassium": 45,
+    "ph": 6.5
+  },
+  "guntur": {
+    "nitrogen": 90,
+    "phosphorus": 45,
+    "potassium": 48,
+    "ph": 7.2
+  },
+  "tenali": {
+    "nitrogen": 88,
+    "phosphorus": 44,
+    "potassium": 46,
+    "ph": 7.0
+  },
+  "krishna": {
+    "nitrogen": 92,
+    "phosphorus": 46,
+    "potassium": 50,
+    "ph": 6.9
+  },
+  "warangal": {
+    "nitrogen": 80,
+    "phosphorus": 38,
+    "potassium": 38,
+    "ph": 6.7
+  },
+  "kurnool": {
+    "nitrogen": 65,
+    "phosphorus": 30,
+    "potassium": 35,
+    "ph": 7.5
+  },
+  "visakhapatnam": {
+    "nitrogen": 75,
+    "phosphorus": 40,
+    "potassium": 42,
+    "ph": 6.4
+  },
+  "bengaluru": {
+    "nitrogen": 68,
+    "phosphorus": 48,
+    "potassium": 38,
+    "ph": 6.6
+  },
+  "chennai": {
+    "nitrogen": 72,
+    "phosphorus": 38,
+    "potassium": 44,
+    "ph": 7.3
+  },
+  "default": {
+    "nitrogen": 75,
+    "phosphorus": 40,
+    "potassium": 35,
+    "ph": 6.5
+  }
+}
