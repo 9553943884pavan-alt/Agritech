@@ -6,7 +6,7 @@ ML Pipeline (as per README.md Slide 7):
   1. Geocoding + 90-day weather (Open-Meteo)
   2. Exact numeric soil-test readings (the public SHC map exposes aggregates only)
   3. Random Forest Classifier -> Top-3 suitable crops
-  4. Yield Lookup v2 -> Hierarchical median: crop×state×season
+  4. Yield Lookup v3 -> Recent district×crop×season median with fallbacks
      [XGBoost v1 retired: Yield=Production/Area circular leakage, no causal features]
   5. District/state Mandi API prices + labelled prototype mock prices + optimization
 
@@ -71,7 +71,7 @@ REG_DIR = PROJECT_ROOT / "ml" / "experiments" / "regressor"  / "models"
 _clf          = None
 _clf_meta     = None
 _reg_meta     = None       # kept for logging/metadata only
-_yield_lookup = None       # v2 hierarchical lookup (crop × state × season)
+_yield_lookup = None       # v3 recent district-aware historical yield lookup
 
 def _load_models():
     global _clf, _clf_meta, _reg_meta, _yield_lookup
@@ -80,7 +80,7 @@ def _load_models():
     cmeta_path = CLS_DIR / "rf_classifier_v1_meta.json"
     reg_path  = REG_DIR / "xgb_regressor_v1.joblib"          # kept for reference, not used
     rmeta_path = REG_DIR / "xgb_regressor_v1_meta.json"
-    ylookup_path = REG_DIR / "crop_yield_lookup_v2.json"      # v2 hierarchical lookup
+    ylookup_path = REG_DIR / "crop_yield_lookup_v3.json"
 
     if clf_path.exists():
         _clf = joblib.load(clf_path)
@@ -96,14 +96,14 @@ def _load_models():
         if rmeta_path.exists():
             with open(rmeta_path, "r", encoding="utf-8") as f:
                 _reg_meta = json.load(f)
-        print("[INFO] XGBoost Regressor artifacts found (not loaded -- v2 lookup active).")
+        print("[INFO] XGBoost artifacts found (not loaded -- v3 yield lookup active).")
     else:
-        print("[WARN] XGBoost artifacts not found; the yield lookup is used if available.")
+        print("[INFO] XGBoost artifacts are not required; the yield lookup is used if available.")
 
     if ylookup_path.exists():
         with open(ylookup_path, "r", encoding="utf-8") as f:
             _yield_lookup = json.load(f)
-        print("[INFO] crop_yield_lookup_v2.json loaded successfully.")
+        print("[INFO] crop_yield_lookup_v3.json loaded successfully.")
 
 _load_models()
 
@@ -127,50 +127,60 @@ def _predict_top_crops(n: float, p: float, k: float,
     return [classes[i] for i in top_idx]
 
 
-# ── Regressor helper (v2 — lookup table, no XGBoost) ─────────────────────────
+# ── Yield estimator (v3 — district-aware historical lookup) ──────────────────
 # EXP_REG_01 (XGBoost) was retired: Yield = Production/Area is a mathematical
 # identity in the source data. Area/Production as features = circular leakage.
 # State + Season + log(Area) have |r| < 0.1 with Yield → no causal signal.
-# EXP_REG_02: hierarchical median lookup (L1: crop×state×season,
-# L2: crop×season, L3: crop global). R²=0.89 on 20% holdout.
+# EXP_REG_03 uses recent crop×district×season medians with state, season,
+# and crop-wide fallbacks. Validation is time-ordered to avoid future leakage.
 
 def _predict_yields(
-    crops: list[str], state: str, season: str = "Kharif"
+    crops: list[str],
+    state: str,
+    season: str = "Kharif",
+    district: str | None = None,
 ) -> dict[str, float | None]:
     """
-    Returns {crop: yield_t_per_ha} using the v2 hierarchical lookup table.
-    Fallback order: L1 (crop×state×season) → L2 (crop×season) → L3 (crop global).
+    Return historical yield estimates (t/ha) at district level when available.
+    Fallback order: district×season → state×season → crop×season → crop median.
     """
     yields = {}
+    state_key = normalize_name(state)
+    district_key = normalize_name(district)
+    season_key = normalize_name(season)
 
     for crop in crops:
         if _yield_lookup and crop in _yield_lookup:
             crop_data = _yield_lookup[crop]
-            state_season = crop_data.get("by_state_season", {})
-            state_yield = next(
+            district_key_value = f"{state_key}|{district_key}|{season_key}"
+            state_key_value = f"{state_key}|{season_key}"
+            district_yield = (
+                crop_data.get("by_district_season", {})
+                .get(district_key_value, {})
+                .get("median")
+                if district_key
+                else None
+            )
+            state_yield = (
+                crop_data.get("by_state_season", {})
+                .get(state_key_value, {})
+                .get("median")
+            )
+            season_yield = crop_data.get("by_season", {}).get(
+                season_key, {}
+            ).get("median")
+            yields[crop] = next(
                 (
-                    value["median"]
-                    for key, value in state_season.items()
-                    if "|" in key
-                    and normalize_name(key.rsplit("|", 1)[0]) == normalize_name(state)
-                    and key.rsplit("|", 1)[1].casefold() == season.casefold()
+                    value
+                    for value in (
+                        district_yield,
+                        state_yield,
+                        season_yield,
+                        crop_data.get("global_median"),
+                    )
+                    if value is not None
                 ),
                 None,
-            )
-            season_yield = next(
-                (
-                    value["median"]
-                    for key, value in crop_data.get("by_season", {}).items()
-                    if key.casefold() == season.casefold()
-                ),
-                None,
-            )
-            yields[crop] = (
-                state_yield
-                if state_yield is not None
-                else season_yield
-                if season_yield is not None
-                else crop_data.get("global_median")
             )
         else:
             yields[crop] = None
@@ -324,7 +334,12 @@ def optimize_farm(req: OptimizeRequest):
     # 4. Resolve yield estimates against the geocoded state and current season.
     current_month = date.today().month
     season = "Kharif" if 6 <= current_month <= 11 else "Rabi"
-    custom_yields = _predict_yields(candidates, state=state_label, season=season)
+    custom_yields = _predict_yields(
+        candidates,
+        state=state_label,
+        season=season,
+        district=district_label,
+    )
     if _yield_lookup is None:
         raise HTTPException(
             status_code=503,
@@ -401,7 +416,7 @@ def optimize_farm(req: OptimizeRequest):
         "detected_season":    season,
         "models_used": {
             "classifier": model_used_classifier,
-            "regressor": "yield-lookup-v2",
+            "regressor": "district-aware-yield-lookup-v3",
             "market_prices": "Mandi API district/state averages with labelled prototype mock prices",
         },
         "top_crops_recommended": candidates,

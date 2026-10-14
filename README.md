@@ -48,7 +48,7 @@
 *(Our innovations span across Models, Data, UX, and Economics)*
 
 * **🤖 Advanced ML & Optimization Engine**
-  * Seamlessly chaining *Random Forest* (for crop suitability) with a *crop/state/season hierarchical median yield lookup* and *SciPy Linear Programming* (for budget/land optimization).
+  * Seamlessly chaining *Random Forest* (for crop suitability) with a *recent district/crop/season historical-yield estimator* and *SciPy Linear Programming* (for budget/land optimization).
 * **🎙️ Zero-Friction Farmer UX**
   * Integrated Web Speech API for voice inputs in local languages. Public model estimates, farmer-provided measurements, and static mock fallbacks are identified separately.
 * **📊 Intelligent Data Integration & APIs**
@@ -97,7 +97,7 @@ graph TD
     D -->|90-Day Temp/Rain| E
     
     %% The Output of Classifier feeds the next steps
-    E -->|Outputs Top 3 Crops| F[Crop/State/Season Median Yield Lookup]
+    E -->|Outputs Top 3 Crops| F[Recent District/State/Season Yield Lookup]
     E -->|Outputs Top 3 Crops| G[Mandi API district/state average + labelled mock prices]
     
     %% AI Model 2 & APIs for Optimization
@@ -118,7 +118,7 @@ graph TD
 
 ## Detailed Resources Required
 * **Machine Learning & Math:**
-  * Scikit-Learn (Random Forest), hierarchical median yield lookup, SciPy (Linear Programming).
+  * Scikit-Learn (Random Forest), time-validated district-aware historical yield estimator, SciPy (Linear Programming).
 * **Data Sources (Kaggle):**
   * *Crop Recommendation Dataset* (Soil/Weather profiling).
   * *India Agriculture Crop Production* (Historical Yield analytics).
@@ -137,5 +137,5 @@ graph TD
   
 * **💻 Working Prototype:**
   * **Link:** `https://crops-henna.vercel.app/`
-  * **Description:** The React frontend accepts location, land, and budget. The FastAPI backend resolves the district, displays Soil Health Card category summaries when available, uses compatible SoilGrids pH estimates and clearly labelled static mock values for unavailable or incompatible classifier features, then combines historical weather, the trained classifier, state/season yield medians, district/state Mandi API prices, and prototype mock prices in the optimizer. Plans that use mock soil, mock prices, or stale prices are explicitly marked simulated.
+  * **Description:** The React frontend accepts location, land, and budget. The FastAPI backend resolves the district, displays Soil Health Card category summaries when available, uses compatible SoilGrids pH estimates and clearly labelled static mock values for unavailable or incompatible classifier features, then combines historical weather, the trained classifier, recent district/state/season yield estimates, district/state Mandi API prices, and prototype mock prices in the optimizer. Plans that use mock soil, mock prices, or stale prices are explicitly marked simulated.
   * **Local API:** Set `VITE_API_URL=http://127.0.0.1:8000` before `npm run dev` to route the local frontend to the local FastAPI backend. Deployment should set `VITE_API_URL` to the deployed backend URL.

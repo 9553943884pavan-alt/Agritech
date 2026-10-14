@@ -43,6 +43,47 @@ class OptimizeFarmTests(unittest.TestCase):
         }
         self.soil_summary = {"cycle": "2025-26", "district": "Nizamabad"}
 
+    def test_yield_estimator_prefers_district_and_falls_back_by_scope(self):
+        lookup = {
+            "rice": {
+                "global_median": 1.1,
+                "by_season": {"kharif": {"median": 1.2}},
+                "by_state_season": {
+                    "telangana|kharif": {"median": 2.3},
+                },
+                "by_district_season": {
+                    "telangana|nizamabad|kharif": {"median": 3.4},
+                },
+            },
+            "maize": {
+                "global_median": 1.5,
+                "by_state_season": {
+                    "telangana|kharif": {"median": 2.5},
+                },
+                "by_district_season": {},
+            },
+            "cotton": {
+                "global_median": 1.6,
+                "by_district_season": {},
+                "by_state_season": {},
+                "by_season": {},
+            },
+        }
+        with patch.object(main, "_yield_lookup", lookup):
+            predictions = main._predict_yields(
+                ["rice", "maize", "cotton", "coffee"],
+                state="Telangana",
+                district="Nizamabad",
+                season="Kharif",
+            )
+
+        self.assertEqual(predictions, {
+            "rice": 3.4,
+            "maize": 2.5,
+            "cotton": 1.6,
+            "coffee": None,
+        })
+
     def test_missing_soil_test_uses_mapped_or_mock_soil_inputs(self):
         request = main.OptimizeRequest(location="Nizamabad", budget=50000, land_acres=2)
         optimizer_result = SimpleNamespace(
