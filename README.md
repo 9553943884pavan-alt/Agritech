@@ -1,10 +1,10 @@
-# VJH 2k26 Hackathon: Presentation Draft (Final Telugu/English Integrated Version)
-**Project Title:** AI-Based Crop and Agricultural Resource Optimization System
+# AG_07_The_King
+## VJH 2k26 Hackathon: AI-Based Crop and Agricultural Resource Optimization System
 
 ---
 
 ## Slide 1: Team Name & Details
-* **Team Name:** [Insert Team Name]
+* **Team Name:** AG_07_The_King
 * **Team Leader Name:** [Insert Name]
 * **Team Leader Mobile Number:** [Insert Number]
 * **Team Leader Email:** [Insert Email]
