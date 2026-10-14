@@ -3,7 +3,7 @@
 
 ---
 
-## Slide 1: Team Name & Details
+## Team Name & Details
 * **Team ID:** AG_07
 * **Team Name:** The_King
 * **Team Leader Name:** Pavan Kumar
@@ -13,7 +13,7 @@
 
 ---
 
-## Slide 2: Domain and Problem Statement
+## Domain and Problem Statement
 * **Domain:** Agritech & Rural Economics
 * **The Problem (The Reality of Indian Farming):** 
   * **Data is Highly Scattered:** Currently, soil data, weather forecasts, and market prices are scattered across different government portals. There is no single centralized platform for a farmer.
@@ -23,7 +23,7 @@
 
 ---
 
-## Slide 3: Idea / Solution
+## Idea / Solution
 * **The Core Idea:** A Unified, End-to-End Agri-Financial Web Platform.
 * **How it Solves the Problem:**
   * **1. Centralized Intelligence:** We bring Soil Data, Weather Data, Crop Yield Predictions, and Market Prices into one single dashboard.
@@ -32,7 +32,7 @@
 
 ---
 
-## Slide 4: Existing Vs Proposed System
+## Existing Vs Proposed System
 * **Existing Systems:**
   * Disconnected apps (one for weather, one for mandi prices).
   * Inputs are highly technical and not user-friendly.
@@ -44,7 +44,7 @@
 
 ---
 
-## Slide 5: Innovation & USP (Unique Selling Proposition)
+## Innovation & USP (Unique Selling Proposition)
 *(Our innovations span across Models, Data, UX, and Economics)*
 
 * **🤖 Advanced ML & Optimization Engine**
@@ -62,7 +62,7 @@
 
 ---
 
-## Slide 6: Objective & Scope of Solution
+## Objective & Scope of Solution
 * **Key Objectives:**
   * To bridge the digital divide by building an AI platform that uneducated farmers can use via Voice and simple Visual Dashboards.
   * To maximize farmer household profit while preventing the over-utilization of water and fertilizer budgets.
@@ -73,7 +73,7 @@
 
 ---
 
-## Slide 7: System Architecture (Logical Data Flow)
+## System Architecture (Logical Data Flow)
 *(Note: Use this Mermaid flowchart to show exactly how data routes through the different models).*
 
 ```mermaid
@@ -116,7 +116,7 @@ graph TD
 
 ---
 
-## Slide 8: Detailed Resources Required
+## Detailed Resources Required
 * **Machine Learning & Math:**
   * Scikit-Learn (Random Forest), hierarchical median yield lookup, SciPy (Linear Programming).
 * **Data Sources (Kaggle):**
@@ -131,7 +131,7 @@ graph TD
 
 ---
 
-## Slide 9: True Impact & Working Prototype
+## True Impact & Working Prototype
 * **🌍 True Impact:**
   * We are turning complex agronomy and mathematical economics into an accessible tool. By centralizing scattered data and providing an intuitive UI, we empower smallholder farmers to escape debt cycles, make data-driven planting decisions, and maximize their land's financial potential without needing technical literacy.
   
