@@ -1,3 +1,4 @@
+import asyncio
 import json
 import unittest
 from types import SimpleNamespace
@@ -21,6 +22,14 @@ class MockResponse:
 
 
 class OptimizeFarmTests(unittest.TestCase):
+    def test_app_lifespan_initializes_the_price_cache(self):
+        with patch("backend.main.initialize_price_cache") as initialize:
+            async def run_lifespan():
+                async with main.lifespan(main.app):
+                    initialize.assert_called_once_with()
+
+            asyncio.run(run_lifespan())
+
     def setUp(self):
         self.geocoding = {
             "results": [

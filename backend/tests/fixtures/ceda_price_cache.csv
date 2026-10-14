@@ -1,0 +1,6 @@
+crop,commodity_id,matched_name,proxy,median_modal_rs_per_quintal,mean_modal,min_modal,max_modal,n_rows,window_from,window_to,latest_date,sparse,incomplete,as_of,source,fetched_at
+maize,4,Maize,false,4200,4300,4000,4600,70,2024-11-01,2025-10-30,2025-10-30,false,false,2025-10-30,CEDA Agmarknet,2026-10-14T12:00:00Z
+rice,2,Paddy Common,false,2900,2900,2900,2900,70,2024-11-01,2025-10-30,2025-10-30,false,false,2025-10-30,CEDA Agmarknet,2026-10-14T12:00:00Z
+mothbeans,95,Moath Dal,true,4800,4800,4800,4800,70,2024-11-01,2025-10-30,2025-10-30,false,false,2025-10-30,CEDA Agmarknet,2026-10-14T12:00:00Z
+grapes,22,Grapes,false,5000,5000,5000,5000,20,2024-11-01,2025-10-30,2025-10-30,true,false,2025-10-30,CEDA Agmarknet,2026-10-14T12:00:00Z
+apple,17,Apple,false,7000,7000,7000,7000,70,2024-11-01,2025-10-30,2025-09-01,false,true,2025-09-01,CEDA Agmarknet,2026-10-14T12:00:00Z

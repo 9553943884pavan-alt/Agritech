@@ -56,7 +56,7 @@
   * **Historical Weather:** We use a 90-Day Historical Archive API instead of generic daily weather.
   * **Soil Inputs:** The Soil Health Card portal provides district/block nutrient-category counts. SoilGrids provides mapped pH predictions when available; its total-nitrogen units do not match the classifier's N feature, and it does not provide the classifier's P/K features. Missing compatible features use location-keyed static mock values, clearly labelled in the UI; any plan using them is marked simulated.
   * **Scalability:** The soil source resolver keeps source provenance separate from classifier inputs. Prototype mock entries can be replaced by a validated, credentialed provider once access is available and its coverage, units, and feature definitions are verified; an API key alone does not make incompatible values comparable.
-  * **Market Prices:** The public Mandi API provides market-level prices for Maharashtra, Karnataka, Uttar Pradesh, Madhya Pradesh, and Punjab. The prototype averages the latest reports for the resolved district, falls back to the API's state-average history, then uses clearly labelled mock prices if no quote is available. Quotes older than 14 days are identified as stale; plans with mock or stale prices are marked simulated.
+  * **Market Prices:** The resolver prefers a fresh TGK market quote only for crops whose commodity and Rs/quintal units have been verified. No TGK crop is currently enabled because the feed does not document its price units. It then uses a complete national historical Agmarknet price cached through CEDA, followed by a clearly labelled mock price. CEDA rows are historical, not current quotes; sparse or incomplete rows are not used. Plans with mock or proxy prices are marked simulated.
 * **📐 Indian Agricultural Unit Conversions**
   * Algorithms natively handle the conversion of government data (Hectares/Tonnes) into farmer-understandable Indian metrics (**Acres and Quintals**), ensuring the optimization math never crashes.
 
@@ -68,7 +68,7 @@
   * To maximize farmer household profit while preventing the over-utilization of water and fertilizer budgets.
 * **Scope:**
   * Specifically calibrated for the 22 most highly cultivated crops in India.
-  * Live Mandi API coverage is available for Maharashtra, Karnataka, Uttar Pradesh, Madhya Pradesh, and Punjab; individual crop/state quotes can be missing, in which case the UI labels prototype mock prices.
+  * The TGK feed covers Maharashtra, Karnataka, Uttar Pradesh, Madhya Pradesh, and Punjab, but no crop is currently enabled until its price unit is documented. National CEDA historical prices are used when the local cache contains a complete row; otherwise the UI labels a prototype mock price.
   * Displays public Soil Health Card category summaries when available; uses compatible SoilGrids pH estimates and clearly labelled static mock values for unavailable or incompatible classifier inputs.
 
 ---
@@ -78,40 +78,63 @@
 
 ```mermaid
 graph TD
-    %% User Inputs
+    %% Farmer inputs and location-based data
     subgraph Vernacular Farmer UI
         V[🎤 Voice Input: Local Language] --> A
         A[Farmer Inputs: Location, Land Size, Budget]
     end
-    
-    %% APIs
+
     A -->|Location| B(Geocoding API)
     B -->|Lat/Lon| D(Meteorology API: 90-Day History)
     B -->|State + District| C(Soil Health Card Portal: district summaries)
     B -->|Coordinates| Q[SoilGrids mapped soil properties]
-    
-    %% AI Model 1: Classifier
-    C -->|Category summaries for display| S[Soil source and mock-value resolver]
-    Q -->|Compatible pH estimate when available| S
-    S -->|Public estimate, farmer test, or labelled mock values| E[Random Forest Classifier]
+
+    %% Soil Health Card summaries are informational, not numeric classifier inputs
+    C -->|District nutrient-category summary| SC[Dashboard: soil summary and source notes]
+    Q -->|Compatible mapped pH when available| S[Soil input resolver]
+    T[Farmer-provided measured N, P, K, pH when required] --> S
+    S -->|Classifier-compatible values with per-feature provenance| E[Random Forest Classifier]
     D -->|90-Day Temp/Rain| E
-    
-    %% The Output of Classifier feeds the next steps
+
+    %% Crop recommendations feed yield and price resolution
     E -->|Outputs Top 3 Crops| F[Recent District/State/Season Yield Lookup]
-    E -->|Outputs Top 3 Crops| G[Mandi API district/state average + labelled mock prices]
-    
-    %% AI Model 2 & APIs for Optimization
     B -->|State/District| F
-    B -->|State/District| G
-    F -->|Outputs Yield Tonnes| H[SciPy Linear Programming]
-    G -->|Outputs Market Prices| H
-    A -->|Land & Budget Limits| H
-    
-    %% Final Result
-    H --> I((Optimized Interactive Dashboard))
-    
+    E -->|Each recommended crop| P[Crop price resolver]
+    B -->|Resolved state + district| P
+
+    %% Optional offline national CEDA cache build
+    X[CEDA Agmarknet historical prices] -->|National dated records| Y[Resumable cache builder]
+    Y --> Z[(Local CSV cache)]
+    Z -->|Mapped, valid, complete rows only| P
+
+    %% Price-source precedence and current TGK unit limitation
+    P --> G{Fresh, eligible TGK quote?}
+    G -->|Yes: district report, then state average| H[Use live TGK price]
+    G -->|No: stale quote, unsupported crop/state, or unverified units| J{Valid complete CEDA cache row?}
+    J -->|Yes| K[Use historical CEDA median with observation date]
+    J -->|No, sparse, or incomplete| L[Use labelled prototype mock price]
+    H --> M[Resolved price plus source metadata]
+    K --> M
+    L --> M
+    M -->|Missing price or yield: exclude crop| N[Eligible crops with price and yield]
+    F --> N
+    N --> O[SciPy Linear Programming]
+    A -->|Land and budget limits| O
+
+    %% Provenance and simulation warnings flow through to results
+    S --> R{Any soil input is mock?}
+    L --> U{Mock or proxy price used?}
+    K -->|Moth-bean dal proxy| U
+    R --> W[Mark plan simulated when applicable]
+    U --> W
+    O --> I
+    M --> I
+    W --> I
+
+    classDef sim fill:#fff2cc,color:#7a4b00,stroke:#d6a400,stroke-width:2px;
     classDef model fill:#4facfe,color:#fff,stroke:#00f2fe,stroke-width:2px;
-    class E,F,H model;
+    class E,F,O model;
+    class L,W sim;
 ```
 
 ---
@@ -124,7 +147,8 @@ graph TD
   * *India Agriculture Crop Production* (Historical Yield analytics).
 * **Live APIs & Mapping:**
   * **Open-Meteo:** For Geocoding and 90-Day Historical Climate Data.
-  * **Public Mandi API:** `https://mandi-api.onrender.com/v1/prices` provides market reports and `https://mandi-api.onrender.com/v1/prices/history` provides state-average history for Maharashtra, Karnataka, Uttar Pradesh, Madhya Pradesh, and Punjab. The prototype aggregates latest reports in the geocoded district when available, then uses the API state average; unavailable crop/state quotes use labelled prototype mock prices. Data older than 14 days is marked stale, and any plan using mock or stale market prices is marked simulated.
+  * **TGK Mandi API:** `https://mandi-api.onrender.com/v1/prices` and `/v1/prices/history` provide market and state-average reports for Maharashtra, Karnataka, Uttar Pradesh, Madhya Pradesh, and Punjab. The resolver can use fresh district/state quotes only for explicitly verified crop names and units. The response does not document its price unit, so no TGK crops are currently enabled.
+  * **CEDA / Agmarknet:** A local cache can hold national historical modal prices for mapped crops. Its latest verified date is 2025-10-30; these values are clearly labelled historical and must not be described as current market prices. Sparse or incomplete cache rows fall through to labelled prototype mock prices. `python scripts/build_ceda_cache.py --dry-run` previews the cache build without network access; running without `--dry-run` requires `CEDA_API_KEY` in the root `.env` and fetches data.
 * **Full-Stack Technologies:**
   * **Backend:** Python & FastAPI (for lightning-fast model inference).
   * **Frontend:** React + Vite + Vanilla CSS (for Glassmorphism & Voice API integration).
@@ -137,5 +161,11 @@ graph TD
   
 * **💻 Working Prototype:**
   * **Link:** `https://crops-henna.vercel.app/`
-  * **Description:** The React frontend accepts location, land, and budget. The FastAPI backend resolves the district, displays Soil Health Card category summaries when available, uses compatible SoilGrids pH estimates and clearly labelled static mock values for unavailable or incompatible classifier features, then combines historical weather, the trained classifier, recent district/state/season yield estimates, district/state Mandi API prices, and prototype mock prices in the optimizer. Plans that use mock soil, mock prices, or stale prices are explicitly marked simulated.
+  * **Description:** The React frontend accepts location, land, and budget. The FastAPI backend resolves the district, displays Soil Health Card category summaries when available, uses compatible SoilGrids pH estimates and clearly labelled static mock values for unavailable or incompatible classifier features, then combines historical weather, the trained classifier, recent district/state/season yield estimates, verified fresh TGK prices when available, cached historical CEDA prices, and prototype mock prices in the optimizer. Price sources and historical dates are shown; plans that use mock soil, mock prices, or proxy prices are explicitly marked simulated.
   * **Local API:** Set `VITE_API_URL=http://127.0.0.1:8000` before `npm run dev` to route the local frontend to the local FastAPI backend. Deployment should set `VITE_API_URL` to the deployed backend URL.
+
+### Market price data notes
+
+* `data/ceda_crop_map.final.json` contains the finalized mapping for the 22 classifier classes. Kidney beans has no verified CEDA commodity ID and always uses the labelled mock price; moth bean uses a processed-dal proxy and is marked simulated.
+* `data/ceda_price_cache.csv` is an optional local artifact and is intentionally git-ignored. The application validates each row against its commodity mapping and uses only rows marked neither sparse nor incomplete. It labels accepted values with their observation month and source.
+* To build the national cache, configure `CEDA_API_KEY` in `.env`, review the plan with `python scripts/build_ceda_cache.py --dry-run`, then run `python scripts/build_ceda_cache.py` when ready. The builder records progress so interrupted runs can resume. Do not commit `.env`, cache progress, or the generated cache.

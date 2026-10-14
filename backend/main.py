@@ -8,7 +8,7 @@ ML Pipeline (as per README.md Slide 7):
   3. Random Forest Classifier -> Top-3 suitable crops
   4. Yield Lookup v3 -> Recent district×crop×season median with fallbacks
      [XGBoost v1 retired: Yield=Production/Area circular leakage, no causal features]
-  5. District/state Mandi API prices + labelled prototype mock prices + optimization
+  5. Verified TGK quotes, cached CEDA history, and labelled mock prices + optimization
 
 Protocol: Rules.md - pathlib, no hardcoded paths, ASCII-safe output, random_state=42
 """
@@ -17,6 +17,8 @@ import json
 import statistics
 import urllib.request
 import urllib.parse
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -31,11 +33,18 @@ from .data_sources import (
     get_crop_prices,
     get_soil_inputs,
     get_soil_health_summary,
+    initialize_price_cache,
     normalize_name,
 )
 from .optimizer.lp_solver import optimize_crop_allocation
 
-app = FastAPI(title="AgriTech Optimization API")
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    initialize_price_cache()
+    yield
+
+
+app = FastAPI(title="AgriTech Optimization API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -383,13 +392,14 @@ def optimize_farm(req: OptimizeRequest):
         for detail in soil_data_provenance.values()
     )
     price_data_is_simulated = any(
-        mandi_details.get(crop, {}).get("status") == "mock"
+        mandi_details.get(crop, {}).get("is_simulated", False)
+        or mandi_details.get(crop, {}).get("status") == "mock"
         or mandi_details.get(crop, {}).get("is_stale", False)
         for crop in optimized_crops
     )
     plan_is_simulated = soil_data_is_simulated or price_data_is_simulated
 
-    # 6. Optimize using available Mandi quotes and clearly labelled mock prices.
+    # 6. Optimize using resolved market prices and clearly labelled mock fallbacks.
     lp_result = optimize_crop_allocation(
         land_acres=req.land_acres,
         budget=req.budget,
@@ -417,11 +427,28 @@ def optimize_farm(req: OptimizeRequest):
         "models_used": {
             "classifier": model_used_classifier,
             "regressor": "district-aware-yield-lookup-v3",
-            "market_prices": "Mandi API district/state averages with labelled prototype mock prices",
+            "market_prices": (
+                "TGK valid live quotes, CEDA cached historical prices, then labelled mock prices"
+            ),
         },
         "top_crops_recommended": candidates,
         "optimized_crops": optimized_crops,
         "mandi_prices": mandi_details,
+        "price_metadata": {
+            crop: {
+                field: mandi_details[crop].get(field)
+                for field in (
+                    "source",
+                    "as_of",
+                    "label",
+                    "proxy",
+                    "is_simulated",
+                    "warning",
+                )
+            }
+            for crop in candidates
+            if crop in mandi_details
+        },
         "price_data_is_simulated": price_data_is_simulated,
         "plan_is_simulated": plan_is_simulated,
         "profit_estimate_type": "simulated" if plan_is_simulated else "estimated",

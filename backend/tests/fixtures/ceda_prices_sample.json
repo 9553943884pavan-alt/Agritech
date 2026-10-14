@@ -1,0 +1,10 @@
+{
+  "output": {
+    "data": [
+      {"date": "2025-10-27", "modal_price": 2000},
+      {"date": "2025-10-30", "modal_price": 4000},
+      {"date": "2025-10-29", "modal_price": null},
+      {"date": "2025-10-28", "modal_price": 0}
+    ]
+  }
+}

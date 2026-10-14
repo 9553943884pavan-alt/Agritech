@@ -192,6 +192,9 @@ class DataSourceTests(unittest.TestCase):
 
         with (
             patch.object(
+                data_sources, "TGK_ELIGIBLE_CROPS", frozenset({"rice"})
+            ),
+            patch.object(
                 data_sources,
                 "_load_price_mappings",
                 return_value=(
@@ -209,7 +212,7 @@ class DataSourceTests(unittest.TestCase):
 
         self.assertEqual(prices, {"rice": 3200.0})
         self.assertEqual(details["rice"]["status"], "live")
-        self.assertEqual(details["rice"]["source"], "Mandi API")
+        self.assertEqual(details["rice"]["source"], "tgk_live")
         self.assertEqual(details["rice"]["scope"], "district_aggregate")
         self.assertEqual(details["rice"]["markets"], ["Market A", "Market B"])
         self.assertFalse(details["rice"]["is_stale"])
@@ -243,6 +246,9 @@ class DataSourceTests(unittest.TestCase):
 
         with (
             patch.object(
+                data_sources, "TGK_ELIGIBLE_CROPS", frozenset({"rice"})
+            ),
+            patch.object(
                 data_sources,
                 "_load_price_mappings",
                 return_value=(
@@ -264,6 +270,9 @@ class DataSourceTests(unittest.TestCase):
 
     def test_mandi_outage_uses_mock_prices_and_surfaces_error(self):
         with (
+            patch.object(
+                data_sources, "TGK_ELIGIBLE_CROPS", frozenset({"rice"})
+            ),
             patch.object(
                 data_sources,
                 "_load_price_mappings",

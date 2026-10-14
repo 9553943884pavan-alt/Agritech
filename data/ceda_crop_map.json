@@ -1,0 +1,801 @@
+{
+  "rice": {
+    "commodity_id": null,
+    "matched_name": null,
+    "confidence_flag": "ambiguous",
+    "candidates": [
+      {
+        "commodity_id": 414,
+        "name": "Paddy(Dhan)(Basmati)",
+        "score": 1.0
+      },
+      {
+        "commodity_id": 2,
+        "name": "Paddy(Dhan)(Common)",
+        "score": 1.0
+      },
+      {
+        "commodity_id": 3,
+        "name": "Rice",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Paddy (Dhan) (Common)",
+        "best_match": {
+          "commodity_id": 2,
+          "name": "Paddy(Dhan)(Common)",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 2,
+            "name": "Paddy(Dhan)(Common)",
+            "score": 1.0
+          }
+        ]
+      },
+      {
+        "candidate_name": "Paddy (Dhan) (Basmati)",
+        "best_match": {
+          "commodity_id": 414,
+          "name": "Paddy(Dhan)(Basmati)",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 414,
+            "name": "Paddy(Dhan)(Basmati)",
+            "score": 1.0
+          }
+        ]
+      },
+      {
+        "candidate_name": "Rice",
+        "best_match": {
+          "commodity_id": 3,
+          "name": "Rice",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 3,
+            "name": "Rice",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Resolve the commodity choice, then use a verified cache; otherwise use the labelled mock price."
+  },
+  "maize": {
+    "commodity_id": 4,
+    "matched_name": "Maize",
+    "confidence_flag": "high",
+    "candidates": [
+      {
+        "commodity_id": 4,
+        "name": "Maize",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Maize",
+        "best_match": {
+          "commodity_id": 4,
+          "name": "Maize",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 4,
+            "name": "Maize",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+  },
+  "chickpea": {
+    "commodity_id": null,
+    "matched_name": null,
+    "confidence_flag": "ambiguous",
+    "candidates": [
+      {
+        "commodity_id": 6,
+        "name": "Bengal Gram(Gram)(Whole)",
+        "score": 1.0
+      },
+      {
+        "commodity_id": 362,
+        "name": "Kabuli Chana(Chickpeas-White)",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Bengal Gram (Gram) (Whole)",
+        "best_match": {
+          "commodity_id": 6,
+          "name": "Bengal Gram(Gram)(Whole)",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 6,
+            "name": "Bengal Gram(Gram)(Whole)",
+            "score": 1.0
+          }
+        ]
+      },
+      {
+        "candidate_name": "Kabuli Chana (Chickpeas-White)",
+        "best_match": {
+          "commodity_id": 362,
+          "name": "Kabuli Chana(Chickpeas-White)",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 362,
+            "name": "Kabuli Chana(Chickpeas-White)",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Resolve the commodity choice, then use a verified cache; otherwise use the labelled mock price."
+  },
+  "kidneybeans": {
+    "commodity_id": null,
+    "matched_name": null,
+    "confidence_flag": "ambiguous",
+    "candidates": [
+      {
+        "commodity_id": 94,
+        "name": "Beans",
+        "score": 1.0
+      },
+      {
+        "commodity_id": 97,
+        "name": "Other Pulses",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Rajma",
+        "best_match": {
+          "commodity_id": 282,
+          "name": "Ram",
+          "score": 0.75
+        },
+        "matches_considered": []
+      },
+      {
+        "candidate_name": "Other Pulses",
+        "best_match": {
+          "commodity_id": 97,
+          "name": "Other Pulses",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 97,
+            "name": "Other Pulses",
+            "score": 1.0
+          }
+        ]
+      },
+      {
+        "candidate_name": "Beans",
+        "best_match": {
+          "commodity_id": 94,
+          "name": "Beans",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 94,
+            "name": "Beans",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Resolve the commodity choice, then use a verified cache; otherwise use the labelled mock price."
+  },
+  "pigeonpeas": {
+    "commodity_id": null,
+    "matched_name": null,
+    "confidence_flag": "ambiguous",
+    "candidates": [
+      {
+        "commodity_id": 49,
+        "name": "Arhar (Tur/Red Gram)(Whole)",
+        "score": 1.0
+      },
+      {
+        "commodity_id": 7,
+        "name": "Red Gram",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Arhar (Tur/Red Gram) (Whole)",
+        "best_match": {
+          "commodity_id": 49,
+          "name": "Arhar (Tur/Red Gram)(Whole)",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 49,
+            "name": "Arhar (Tur/Red Gram)(Whole)",
+            "score": 1.0
+          }
+        ]
+      },
+      {
+        "candidate_name": "Red Gram",
+        "best_match": {
+          "commodity_id": 7,
+          "name": "Red Gram",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 7,
+            "name": "Red Gram",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Resolve the commodity choice, then use a verified cache; otherwise use the labelled mock price."
+  },
+  "mothbeans": {
+    "commodity_id": null,
+    "matched_name": null,
+    "confidence_flag": "ambiguous",
+    "candidates": [
+      {
+        "commodity_id": 60,
+        "name": "Mash",
+        "score": 1.0
+      },
+      {
+        "commodity_id": 95,
+        "name": "Moath Dal",
+        "score": 1.0
+      },
+      {
+        "commodity_id": 258,
+        "name": "Moath Dal",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Moath Dal",
+        "best_match": {
+          "commodity_id": 95,
+          "name": "Moath Dal",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 95,
+            "name": "Moath Dal",
+            "score": 1.0
+          },
+          {
+            "commodity_id": 258,
+            "name": "Moath Dal",
+            "score": 1.0
+          }
+        ]
+      },
+      {
+        "candidate_name": "Mash",
+        "best_match": {
+          "commodity_id": 60,
+          "name": "Mash",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 60,
+            "name": "Mash",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Resolve the commodity choice, then use a verified cache; otherwise use the labelled mock price."
+  },
+  "mungbean": {
+    "commodity_id": 9,
+    "matched_name": "Green Gram (Moong)(Whole)",
+    "confidence_flag": "high",
+    "candidates": [
+      {
+        "commodity_id": 9,
+        "name": "Green Gram (Moong)(Whole)",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Green Gram (Moong) (Whole)",
+        "best_match": {
+          "commodity_id": 9,
+          "name": "Green Gram (Moong)(Whole)",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 9,
+            "name": "Green Gram (Moong)(Whole)",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+  },
+  "blackgram": {
+    "commodity_id": 8,
+    "matched_name": "Black Gram (Urd Beans)(Whole)",
+    "confidence_flag": "high",
+    "candidates": [
+      {
+        "commodity_id": 8,
+        "name": "Black Gram (Urd Beans)(Whole)",
+        "score": 0.9811
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Black Gram (Urad Beans) (Whole)",
+        "best_match": {
+          "commodity_id": 8,
+          "name": "Black Gram (Urd Beans)(Whole)",
+          "score": 0.9811
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 8,
+            "name": "Black Gram (Urd Beans)(Whole)",
+            "score": 0.9811
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+  },
+  "lentil": {
+    "commodity_id": 63,
+    "matched_name": "Lentil (Masur)(Whole)",
+    "confidence_flag": "high",
+    "candidates": [
+      {
+        "commodity_id": 63,
+        "name": "Lentil (Masur)(Whole)",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Lentil (Masur) (Whole)",
+        "best_match": {
+          "commodity_id": 63,
+          "name": "Lentil (Masur)(Whole)",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 63,
+            "name": "Lentil (Masur)(Whole)",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+  },
+  "pomegranate": {
+    "commodity_id": 190,
+    "matched_name": "Pomegranate",
+    "confidence_flag": "high",
+    "candidates": [
+      {
+        "commodity_id": 190,
+        "name": "Pomegranate",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Pomegranate",
+        "best_match": {
+          "commodity_id": 190,
+          "name": "Pomegranate",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 190,
+            "name": "Pomegranate",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+  },
+  "banana": {
+    "commodity_id": 19,
+    "matched_name": "Banana",
+    "confidence_flag": "high",
+    "candidates": [
+      {
+        "commodity_id": 19,
+        "name": "Banana",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Banana",
+        "best_match": {
+          "commodity_id": 19,
+          "name": "Banana",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 19,
+            "name": "Banana",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+  },
+  "mango": {
+    "commodity_id": 20,
+    "matched_name": "Mango",
+    "confidence_flag": "high",
+    "candidates": [
+      {
+        "commodity_id": 20,
+        "name": "Mango",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Mango",
+        "best_match": {
+          "commodity_id": 20,
+          "name": "Mango",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 20,
+            "name": "Mango",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+  },
+  "grapes": {
+    "commodity_id": 22,
+    "matched_name": "Grapes",
+    "confidence_flag": "high",
+    "candidates": [
+      {
+        "commodity_id": 22,
+        "name": "Grapes",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Grapes",
+        "best_match": {
+          "commodity_id": 22,
+          "name": "Grapes",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 22,
+            "name": "Grapes",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+  },
+  "watermelon": {
+    "commodity_id": 73,
+    "matched_name": "Water Melon",
+    "confidence_flag": "high",
+    "candidates": [
+      {
+        "commodity_id": 73,
+        "name": "Water Melon",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Water Melon",
+        "best_match": {
+          "commodity_id": 73,
+          "name": "Water Melon",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 73,
+            "name": "Water Melon",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+  },
+  "muskmelon": {
+    "commodity_id": 187,
+    "matched_name": "Karbuja(Musk Melon)",
+    "confidence_flag": "high",
+    "candidates": [
+      {
+        "commodity_id": 187,
+        "name": "Karbuja(Musk Melon)",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Karbuja (Musk Melon)",
+        "best_match": {
+          "commodity_id": 187,
+          "name": "Karbuja(Musk Melon)",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 187,
+            "name": "Karbuja(Musk Melon)",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+  },
+  "apple": {
+    "commodity_id": 17,
+    "matched_name": "Apple",
+    "confidence_flag": "high",
+    "candidates": [
+      {
+        "commodity_id": 17,
+        "name": "Apple",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Apple",
+        "best_match": {
+          "commodity_id": 17,
+          "name": "Apple",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 17,
+            "name": "Apple",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+  },
+  "orange": {
+    "commodity_id": 18,
+    "matched_name": "Orange",
+    "confidence_flag": "high",
+    "candidates": [
+      {
+        "commodity_id": 18,
+        "name": "Orange",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Orange",
+        "best_match": {
+          "commodity_id": 18,
+          "name": "Orange",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 18,
+            "name": "Orange",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+  },
+  "papaya": {
+    "commodity_id": 72,
+    "matched_name": "Papaya",
+    "confidence_flag": "high",
+    "candidates": [
+      {
+        "commodity_id": 72,
+        "name": "Papaya",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Papaya",
+        "best_match": {
+          "commodity_id": 72,
+          "name": "Papaya",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 72,
+            "name": "Papaya",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+  },
+  "coconut": {
+    "commodity_id": 138,
+    "matched_name": "Coconut",
+    "confidence_flag": "high",
+    "candidates": [
+      {
+        "commodity_id": 138,
+        "name": "Coconut",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Coconut",
+        "best_match": {
+          "commodity_id": 138,
+          "name": "Coconut",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 138,
+            "name": "Coconut",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+  },
+  "cotton": {
+    "commodity_id": 15,
+    "matched_name": "Cotton",
+    "confidence_flag": "high",
+    "candidates": [
+      {
+        "commodity_id": 15,
+        "name": "Cotton",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Cotton",
+        "best_match": {
+          "commodity_id": 15,
+          "name": "Cotton",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 15,
+            "name": "Cotton",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+  },
+  "jute": {
+    "commodity_id": 16,
+    "matched_name": "Jute",
+    "confidence_flag": "high",
+    "candidates": [
+      {
+        "commodity_id": 16,
+        "name": "Jute",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Jute",
+        "best_match": {
+          "commodity_id": 16,
+          "name": "Jute",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 16,
+            "name": "Jute",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+  },
+  "coffee": {
+    "commodity_id": 45,
+    "matched_name": "Coffee",
+    "confidence_flag": "high",
+    "candidates": [
+      {
+        "commodity_id": 45,
+        "name": "Coffee",
+        "score": 1.0
+      }
+    ],
+    "candidate_evaluations": [
+      {
+        "candidate_name": "Coffee",
+        "best_match": {
+          "commodity_id": 45,
+          "name": "Coffee",
+          "score": 1.0
+        },
+        "matches_considered": [
+          {
+            "commodity_id": 45,
+            "name": "Coffee",
+            "score": 1.0
+          }
+        ]
+      }
+    ],
+    "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+  }
+}

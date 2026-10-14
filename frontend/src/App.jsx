@@ -1,4 +1,9 @@
 import { useState } from 'react';
+import {
+  PriceSimulationBanner,
+  PriceSources
+} from './PriceSources.jsx';
+import { hasSimulatedPrice } from './priceSimulation.js';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://agritech-1euc.onrender.com';
 
@@ -20,6 +25,13 @@ function App() {
   const [soilSourceError, setSoilSourceError] = useState('');
   const [mandiFailures, setMandiFailures] = useState(null);
   const [error, setError] = useState('');
+  const priceDetails = {
+    ...(result?.price_metadata || {}),
+    ...(result?.mandi_prices || {})
+  };
+  const priceDataIsSimulated = Boolean(
+    result?.price_data_is_simulated || hasSimulatedPrice(priceDetails)
+  );
 
   const updateLocation = (value) => {
     setLocation(value);
@@ -249,14 +261,12 @@ function App() {
             <div className="success-banner">
               {result.message}
             </div>
-            {result.plan_is_simulated && (
-              <div className="simulation-warning" role="alert">
-                SIMULATED DEMO:
-                {result.soil_data_is_simulated && ' One or more soil inputs came from static mock JSON.'}
-                {result.price_data_is_simulated && ' One or more market prices are mock or older than 14 days.'}
-                {' '}This plan and its profit estimate are not a real farm or market forecast.
-              </div>
-            )}
+            <PriceSimulationBanner
+              planIsSimulated={result.plan_is_simulated}
+              soilDataIsSimulated={result.soil_data_is_simulated}
+              priceDataIsSimulated={priceDataIsSimulated}
+              prices={priceDetails}
+            />
             
             <div className="dashboard-grid">
               <div className="glass-card stat-card">
@@ -309,19 +319,8 @@ function App() {
               </div>
             </div>
 
-            <h3 className="section-title">Mandi prices (district/state API with mock fallback)</h3>
-            <div className="mandi-price-list">
-              {Object.entries(result.mandi_prices).map(([crop, price]) => (
-                <div className="mandi-price-item" key={crop}>
-                  <strong>{crop}</strong>
-                  {price.status === 'live'
-                    ? ` LIVE Mandi API${price.is_stale ? ' — STALE' : ''} ${price.scope === 'district_aggregate' ? `district aggregate for ${price.district} (${price.market_count} markets${price.markets?.length ? `: ${price.markets.join(', ')}` : ''})` : 'state average'}: ₹${price.price_per_quintal.toLocaleString()} / quintal (reported ${price.arrival_date})`
-                    : price.status === 'mock'
-                      ? ` MOCK / NOT A REAL QUOTE: ₹${price.price_per_quintal.toLocaleString()} / quintal — ${price.reason}`
-                    : ` Not used — ${price.reason}`}
-                </div>
-              ))}
-            </div>
+            <h3 className="section-title">Market prices</h3>
+            <PriceSources prices={priceDetails} />
 
             <h3 className="section-title">Optimized Land Allocation</h3>
             <div className="allocation-list">

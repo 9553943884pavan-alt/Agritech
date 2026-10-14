@@ -1,0 +1,3213 @@
+{
+  "specification": {
+    "url": "https://api.ceda.ashoka.edu.in/documentation/swagger-ui-init.js",
+    "source_method": "OpenAPI document embedded in Swagger UI",
+    "api_title": "CEDA API",
+    "api_version": "1.0.0",
+    "operations": [
+      {
+        "method": "GET",
+        "path": "/agmarknet/commodities",
+        "summary": "Obtain the list of all commodities from the agmarknet platform",
+        "parameters": [],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      {
+        "method": "GET",
+        "path": "/agmarknet/geographies",
+        "summary": "Obtain the list of all states and districts available.",
+        "parameters": [],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      {
+        "method": "POST",
+        "path": "/agmarknet/markets",
+        "summary": "Obtain the list of markets for a given commodity, state and district.",
+        "parameters": [
+          {
+            "name": "commodity_id",
+            "in": "request body (application/json)",
+            "required": true,
+            "type": "integer",
+            "description": "Commodity ID (required). List can be obtained from /commodities endpoint."
+          },
+          {
+            "name": "state_id",
+            "in": "request body (application/json)",
+            "required": true,
+            "type": "integer",
+            "description": "State ID (required). List can be obtained from /geographies endpoint."
+          },
+          {
+            "name": "district_id",
+            "in": "request body (application/json)",
+            "required": true,
+            "type": "integer",
+            "description": "District ID (required). List can be obtained from /geographies endpoint."
+          },
+          {
+            "name": "indicator",
+            "in": "request body (application/json)",
+            "required": true,
+            "type": "string",
+            "description": "Indicator type (required, must be 'price' or 'quantity')"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      {
+        "method": "POST",
+        "path": "/agmarknet/prices",
+        "summary": "Obtain the prices for a commodity at the national, state, district or the market level.",
+        "parameters": [
+          {
+            "name": "commodity_id",
+            "in": "request body (application/json)",
+            "required": true,
+            "type": "integer",
+            "description": "Commodity ID (required)"
+          },
+          {
+            "name": "state_id",
+            "in": "request body (application/json)",
+            "required": true,
+            "type": "integer",
+            "description": "State ID (required). Use 0 for all India level data or state level integer value obtained from /geographies"
+          },
+          {
+            "name": "district_id",
+            "in": "request body (application/json)",
+            "required": false,
+            "type": "array",
+            "description": "Optional district IDs. If not provided, will fetch data at the national or the state level. If provided, will fetch data at the district level."
+          },
+          {
+            "name": "market_id",
+            "in": "request body (application/json)",
+            "required": false,
+            "type": "array",
+            "description": "Optional market IDs. If not provided, will fetch data directly at the district level. If provided, will fetch data for the particular markets within that district."
+          },
+          {
+            "name": "from_date",
+            "in": "request body (application/json)",
+            "required": true,
+            "type": "string",
+            "description": "Start date (required)"
+          },
+          {
+            "name": "to_date",
+            "in": "request body (application/json)",
+            "required": true,
+            "type": "string",
+            "description": "End date (required)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      {
+        "method": "POST",
+        "path": "/agmarknet/quantities",
+        "summary": "Obtain the quantities for a commodity at the national, state, district or market level.",
+        "parameters": [
+          {
+            "name": "commodity_id",
+            "in": "request body (application/json)",
+            "required": true,
+            "type": "integer",
+            "description": "Commodity ID (required)"
+          },
+          {
+            "name": "state_id",
+            "in": "request body (application/json)",
+            "required": true,
+            "type": "integer",
+            "description": "State ID (required). Use 0 for all India level data or state level integer value obtained from /geographies"
+          },
+          {
+            "name": "district_id",
+            "in": "request body (application/json)",
+            "required": false,
+            "type": "array",
+            "description": "Optional district IDs. If not provided, will fetch data at the national or the state level. If provided, will fetch data at the district level."
+          },
+          {
+            "name": "market_id",
+            "in": "request body (application/json)",
+            "required": false,
+            "type": "array",
+            "description": "Optional market IDs. If not provided, will fetch data directly at the district level. If provided, will fetch data for the particular markets within that district."
+          },
+          {
+            "name": "from_date",
+            "in": "request body (application/json)",
+            "required": true,
+            "type": "string",
+            "description": "Start date (required)"
+          },
+          {
+            "name": "to_date",
+            "in": "request body (application/json)",
+            "required": true,
+            "type": "string",
+            "description": "End date (required)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    ],
+    "rate_limit_policy": "HTTP 429 documented; no numeric quota/window found in the spec."
+  },
+  "key_configured": true,
+  "key_output": "********",
+  "auth_check": {
+    "valid_key": {
+      "http_status": 200,
+      "rate_limit_headers": {
+        "RateLimit-Policy": "40;w=3600",
+        "RateLimit-Limit": "40",
+        "RateLimit-Remaining": "31",
+        "RateLimit-Reset": "3469"
+      }
+    },
+    "deliberately_wrong_key": {
+      "http_status": 401,
+      "rate_limit_headers": {},
+      "rejected": true
+    }
+  },
+  "state_ids": {
+    "Andhra Pradesh": 28,
+    "Telangana": 36,
+    "Maharashtra": 27
+  },
+  "price_check": {
+    "method": "POST",
+    "requested": true,
+    "scope": "national only; state tests deferred by user choice",
+    "reason": "National price probes only. Andhra Pradesh, Telangana, and Maharashtra price probes are deferred because of the documented 40/hour quota.",
+    "date_range": {
+      "from_date": "2025-10-14",
+      "to_date": "2026-10-14"
+    },
+    "unique_commodity_ids": 29,
+    "results": [
+      {
+        "crop": "rice",
+        "commodity_id": null,
+        "candidate_ids": [
+          414,
+          2,
+          3
+        ],
+        "status": "ambiguous_mapping",
+        "national": {
+          "http_status": null,
+          "rows": null,
+          "note": "Multiple plausible commodity IDs; inspect candidate_results."
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 414,
+            "matched_name": "Paddy(Dhan)(Basmati)",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "1",
+                "RateLimit-Reset": "3249"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 2826.974683544304,
+              "median_modal_price": 2994.770114942529,
+              "max_modal_price": 3089.3,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 414,
+              "matched_names_and_crops": [
+                {
+                  "crop": "rice",
+                  "name": "Paddy(Dhan)(Basmati)"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          },
+          {
+            "commodity_id": 2,
+            "matched_name": "Paddy(Dhan)(Common)",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "29",
+                "RateLimit-Reset": "3259"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 2234.739224137931,
+              "median_modal_price": 2276.6614906832297,
+              "max_modal_price": 2338.6,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 2,
+              "matched_names_and_crops": [
+                {
+                  "crop": "rice",
+                  "name": "Paddy(Dhan)(Common)"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          },
+          {
+            "commodity_id": 3,
+            "matched_name": "Rice",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "28",
+                "RateLimit-Reset": "3259"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 3513.570652173913,
+              "median_modal_price": 3623.401960784314,
+              "max_modal_price": 3857.076923076923,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 3,
+              "matched_names_and_crops": [
+                {
+                  "crop": "rice",
+                  "name": "Rice"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Resolve the commodity choice, then use a verified cache; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "maize",
+        "commodity_id": 4,
+        "candidate_ids": [
+          4
+        ],
+        "status": "ok",
+        "national": {
+          "http_status": 200,
+          "rate_limit_headers": {
+            "RateLimit-Policy": "40;w=3600",
+            "RateLimit-Limit": "40",
+            "RateLimit-Remaining": "27",
+            "RateLimit-Reset": "3259"
+          },
+          "row_count": 17,
+          "date_range": {
+            "from": "2025-10-14",
+            "to": "2025-10-30"
+          },
+          "latest_date": "2025-10-30",
+          "null_or_zero_modal_price_count": 0,
+          "min_modal_price": 1883.701799485861,
+          "median_modal_price": 1990.8615916955018,
+          "max_modal_price": 2248.1826923076924,
+          "unit_scale_issues": [],
+          "issues": [
+            "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+          ],
+          "runtime_response_shape": "observed output.data wrapper",
+          "commodity_id": 4,
+          "matched_names_and_crops": [
+            {
+              "crop": "maize",
+              "name": "Maize"
+            }
+          ],
+          "latest_data_lag_days": 349,
+          "freshness_warning": true
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 4,
+            "matched_name": "Maize",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "27",
+                "RateLimit-Reset": "3259"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 1883.701799485861,
+              "median_modal_price": 1990.8615916955018,
+              "max_modal_price": 2248.1826923076924,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 4,
+              "matched_names_and_crops": [
+                {
+                  "crop": "maize",
+                  "name": "Maize"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "chickpea",
+        "commodity_id": null,
+        "candidate_ids": [
+          6,
+          362
+        ],
+        "status": "ambiguous_mapping",
+        "national": {
+          "http_status": null,
+          "rows": null,
+          "note": "Multiple plausible commodity IDs; inspect candidate_results."
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 6,
+            "matched_name": "Bengal Gram(Gram)(Whole)",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "26",
+                "RateLimit-Reset": "3258"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 5485.234285714286,
+              "median_modal_price": 5836.026315789473,
+              "max_modal_price": 6551.222222222223,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 6,
+              "matched_names_and_crops": [
+                {
+                  "crop": "chickpea",
+                  "name": "Bengal Gram(Gram)(Whole)"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          },
+          {
+            "commodity_id": 362,
+            "matched_name": "Kabuli Chana(Chickpeas-White)",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "2",
+                "RateLimit-Reset": "3250"
+              },
+              "row_count": 15,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 6580.0,
+              "median_modal_price": 7482.740740740741,
+              "max_modal_price": 11800.0,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 362,
+              "matched_names_and_crops": [
+                {
+                  "crop": "chickpea",
+                  "name": "Kabuli Chana(Chickpeas-White)"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Resolve the commodity choice, then use a verified cache; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "kidneybeans",
+        "commodity_id": null,
+        "candidate_ids": [
+          94,
+          97
+        ],
+        "status": "ambiguous_mapping",
+        "national": {
+          "http_status": null,
+          "rows": null,
+          "note": "Multiple plausible commodity IDs; inspect candidate_results."
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 94,
+            "matched_name": "Beans",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "9",
+                "RateLimit-Reset": "3252"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 5561.538461538462,
+              "median_modal_price": 6536.734693877551,
+              "max_modal_price": 8179.408536585366,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 94,
+              "matched_names_and_crops": [
+                {
+                  "crop": "kidneybeans",
+                  "name": "Beans"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          },
+          {
+            "commodity_id": 97,
+            "matched_name": "Other Pulses",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "7",
+                "RateLimit-Reset": "3251"
+              },
+              "row_count": 0,
+              "date_range": null,
+              "latest_date": null,
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": null,
+              "median_modal_price": null,
+              "max_modal_price": null,
+              "unit_scale_issues": [],
+              "issues": [
+                "No price rows returned for this period."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 97,
+              "matched_names_and_crops": [
+                {
+                  "crop": "kidneybeans",
+                  "name": "Other Pulses"
+                }
+              ],
+              "latest_data_lag_days": null,
+              "freshness_warning": false
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Resolve the commodity choice, then use a verified cache; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "pigeonpeas",
+        "commodity_id": null,
+        "candidate_ids": [
+          49,
+          7
+        ],
+        "status": "ambiguous_mapping",
+        "national": {
+          "http_status": null,
+          "rows": null,
+          "note": "Multiple plausible commodity IDs; inspect candidate_results."
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 49,
+            "matched_name": "Arhar (Tur/Red Gram)(Whole)",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "14",
+                "RateLimit-Reset": "3254"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 6120.885416666667,
+              "median_modal_price": 6551.478873239436,
+              "max_modal_price": 8861.333333333334,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 49,
+              "matched_names_and_crops": [
+                {
+                  "crop": "pigeonpeas",
+                  "name": "Arhar (Tur/Red Gram)(Whole)"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          },
+          {
+            "commodity_id": 7,
+            "matched_name": "Red Gram",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "25",
+                "RateLimit-Reset": "3258"
+              },
+              "row_count": 0,
+              "date_range": null,
+              "latest_date": null,
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": null,
+              "median_modal_price": null,
+              "max_modal_price": null,
+              "unit_scale_issues": [],
+              "issues": [
+                "No price rows returned for this period."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 7,
+              "matched_names_and_crops": [
+                {
+                  "crop": "pigeonpeas",
+                  "name": "Red Gram"
+                }
+              ],
+              "latest_data_lag_days": null,
+              "freshness_warning": false
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Resolve the commodity choice, then use a verified cache; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "mothbeans",
+        "commodity_id": null,
+        "candidate_ids": [
+          60,
+          95,
+          258
+        ],
+        "status": "ambiguous_mapping",
+        "national": {
+          "http_status": null,
+          "rows": null,
+          "note": "Multiple plausible commodity IDs; inspect candidate_results."
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 60,
+            "matched_name": "Mash",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "13",
+                "RateLimit-Reset": "3254"
+              },
+              "row_count": 0,
+              "date_range": null,
+              "latest_date": null,
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": null,
+              "median_modal_price": null,
+              "max_modal_price": null,
+              "unit_scale_issues": [],
+              "issues": [
+                "No price rows returned for this period."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 60,
+              "matched_names_and_crops": [
+                {
+                  "crop": "mothbeans",
+                  "name": "Mash"
+                }
+              ],
+              "latest_data_lag_days": null,
+              "freshness_warning": false
+            }
+          },
+          {
+            "commodity_id": 95,
+            "matched_name": "Moath Dal",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "8",
+                "RateLimit-Reset": "3252"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 4335.3125,
+              "median_modal_price": 4831.454545454545,
+              "max_modal_price": 9600.0,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 95,
+              "matched_names_and_crops": [
+                {
+                  "crop": "mothbeans",
+                  "name": "Moath Dal"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          },
+          {
+            "commodity_id": 258,
+            "matched_name": "Moath Dal",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "3",
+                "RateLimit-Reset": "3250"
+              },
+              "row_count": 0,
+              "date_range": null,
+              "latest_date": null,
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": null,
+              "median_modal_price": null,
+              "max_modal_price": null,
+              "unit_scale_issues": [],
+              "issues": [
+                "No price rows returned for this period."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 258,
+              "matched_names_and_crops": [
+                {
+                  "crop": "mothbeans",
+                  "name": "Moath Dal"
+                }
+              ],
+              "latest_data_lag_days": null,
+              "freshness_warning": false
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Resolve the commodity choice, then use a verified cache; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "mungbean",
+        "commodity_id": 9,
+        "candidate_ids": [
+          9
+        ],
+        "status": "ok",
+        "national": {
+          "http_status": 200,
+          "rate_limit_headers": {
+            "RateLimit-Policy": "40;w=3600",
+            "RateLimit-Limit": "40",
+            "RateLimit-Remaining": "23",
+            "RateLimit-Reset": "3257"
+          },
+          "row_count": 17,
+          "date_range": {
+            "from": "2025-10-14",
+            "to": "2025-10-30"
+          },
+          "latest_date": "2025-10-30",
+          "null_or_zero_modal_price_count": 0,
+          "min_modal_price": 6433.5,
+          "median_modal_price": 6687.147540983607,
+          "max_modal_price": 8980.5,
+          "unit_scale_issues": [],
+          "issues": [
+            "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+          ],
+          "runtime_response_shape": "observed output.data wrapper",
+          "commodity_id": 9,
+          "matched_names_and_crops": [
+            {
+              "crop": "mungbean",
+              "name": "Green Gram (Moong)(Whole)"
+            }
+          ],
+          "latest_data_lag_days": 349,
+          "freshness_warning": true
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 9,
+            "matched_name": "Green Gram (Moong)(Whole)",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "23",
+                "RateLimit-Reset": "3257"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 6433.5,
+              "median_modal_price": 6687.147540983607,
+              "max_modal_price": 8980.5,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 9,
+              "matched_names_and_crops": [
+                {
+                  "crop": "mungbean",
+                  "name": "Green Gram (Moong)(Whole)"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "blackgram",
+        "commodity_id": 8,
+        "candidate_ids": [
+          8
+        ],
+        "status": "ok",
+        "national": {
+          "http_status": 200,
+          "rate_limit_headers": {
+            "RateLimit-Policy": "40;w=3600",
+            "RateLimit-Limit": "40",
+            "RateLimit-Remaining": "24",
+            "RateLimit-Reset": "3258"
+          },
+          "row_count": 17,
+          "date_range": {
+            "from": "2025-10-14",
+            "to": "2025-10-30"
+          },
+          "latest_date": "2025-10-30",
+          "null_or_zero_modal_price_count": 0,
+          "min_modal_price": 5916.025157232704,
+          "median_modal_price": 6772.854166666667,
+          "max_modal_price": 9897.916666666666,
+          "unit_scale_issues": [],
+          "issues": [
+            "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+          ],
+          "runtime_response_shape": "observed output.data wrapper",
+          "commodity_id": 8,
+          "matched_names_and_crops": [
+            {
+              "crop": "blackgram",
+              "name": "Black Gram (Urd Beans)(Whole)"
+            }
+          ],
+          "latest_data_lag_days": 349,
+          "freshness_warning": true
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 8,
+            "matched_name": "Black Gram (Urd Beans)(Whole)",
+            "match_score": 0.9811,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "24",
+                "RateLimit-Reset": "3258"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 5916.025157232704,
+              "median_modal_price": 6772.854166666667,
+              "max_modal_price": 9897.916666666666,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 8,
+              "matched_names_and_crops": [
+                {
+                  "crop": "blackgram",
+                  "name": "Black Gram (Urd Beans)(Whole)"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "lentil",
+        "commodity_id": 63,
+        "candidate_ids": [
+          63
+        ],
+        "status": "ok",
+        "national": {
+          "http_status": 200,
+          "rate_limit_headers": {
+            "RateLimit-Policy": "40;w=3600",
+            "RateLimit-Limit": "40",
+            "RateLimit-Remaining": "12",
+            "RateLimit-Reset": "3253"
+          },
+          "row_count": 17,
+          "date_range": {
+            "from": "2025-10-14",
+            "to": "2025-10-30"
+          },
+          "latest_date": "2025-10-30",
+          "null_or_zero_modal_price_count": 0,
+          "min_modal_price": 6431.42,
+          "median_modal_price": 6746.846153846154,
+          "max_modal_price": 7795.0,
+          "unit_scale_issues": [],
+          "issues": [
+            "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+          ],
+          "runtime_response_shape": "observed output.data wrapper",
+          "commodity_id": 63,
+          "matched_names_and_crops": [
+            {
+              "crop": "lentil",
+              "name": "Lentil (Masur)(Whole)"
+            }
+          ],
+          "latest_data_lag_days": 349,
+          "freshness_warning": true
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 63,
+            "matched_name": "Lentil (Masur)(Whole)",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "12",
+                "RateLimit-Reset": "3253"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 6431.42,
+              "median_modal_price": 6746.846153846154,
+              "max_modal_price": 7795.0,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 63,
+              "matched_names_and_crops": [
+                {
+                  "crop": "lentil",
+                  "name": "Lentil (Masur)(Whole)"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "pomegranate",
+        "commodity_id": 190,
+        "candidate_ids": [
+          190
+        ],
+        "status": "ok",
+        "national": {
+          "http_status": 200,
+          "rate_limit_headers": {
+            "RateLimit-Policy": "40;w=3600",
+            "RateLimit-Limit": "40",
+            "RateLimit-Remaining": "4",
+            "RateLimit-Reset": "3250"
+          },
+          "row_count": 17,
+          "date_range": {
+            "from": "2025-10-14",
+            "to": "2025-10-30"
+          },
+          "latest_date": "2025-10-30",
+          "null_or_zero_modal_price_count": 0,
+          "min_modal_price": 8115.611111111111,
+          "median_modal_price": 10001.882352941177,
+          "max_modal_price": 12680.95588235294,
+          "unit_scale_issues": [],
+          "issues": [
+            "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+          ],
+          "runtime_response_shape": "observed output.data wrapper",
+          "commodity_id": 190,
+          "matched_names_and_crops": [
+            {
+              "crop": "pomegranate",
+              "name": "Pomegranate"
+            }
+          ],
+          "latest_data_lag_days": 349,
+          "freshness_warning": true
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 190,
+            "matched_name": "Pomegranate",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "4",
+                "RateLimit-Reset": "3250"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 8115.611111111111,
+              "median_modal_price": 10001.882352941177,
+              "max_modal_price": 12680.95588235294,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 190,
+              "matched_names_and_crops": [
+                {
+                  "crop": "pomegranate",
+                  "name": "Pomegranate"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "banana",
+        "commodity_id": 19,
+        "candidate_ids": [
+          19
+        ],
+        "status": "ok",
+        "national": {
+          "http_status": 200,
+          "rate_limit_headers": {
+            "RateLimit-Policy": "40;w=3600",
+            "RateLimit-Limit": "40",
+            "RateLimit-Remaining": "18",
+            "RateLimit-Reset": "3255"
+          },
+          "row_count": 17,
+          "date_range": {
+            "from": "2025-10-14",
+            "to": "2025-10-30"
+          },
+          "latest_date": "2025-10-30",
+          "null_or_zero_modal_price_count": 0,
+          "min_modal_price": 3030.6155303030305,
+          "median_modal_price": 3207.3361344537816,
+          "max_modal_price": 3384.776758409786,
+          "unit_scale_issues": [],
+          "issues": [
+            "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+          ],
+          "runtime_response_shape": "observed output.data wrapper",
+          "commodity_id": 19,
+          "matched_names_and_crops": [
+            {
+              "crop": "banana",
+              "name": "Banana"
+            }
+          ],
+          "latest_data_lag_days": 349,
+          "freshness_warning": true
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 19,
+            "matched_name": "Banana",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "18",
+                "RateLimit-Reset": "3255"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 3030.6155303030305,
+              "median_modal_price": 3207.3361344537816,
+              "max_modal_price": 3384.776758409786,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 19,
+              "matched_names_and_crops": [
+                {
+                  "crop": "banana",
+                  "name": "Banana"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "mango",
+        "commodity_id": 20,
+        "candidate_ids": [
+          20
+        ],
+        "status": "ok",
+        "national": {
+          "http_status": 200,
+          "rate_limit_headers": {
+            "RateLimit-Policy": "40;w=3600",
+            "RateLimit-Limit": "40",
+            "RateLimit-Remaining": "17",
+            "RateLimit-Reset": "3255"
+          },
+          "row_count": 17,
+          "date_range": {
+            "from": "2025-10-14",
+            "to": "2025-10-30"
+          },
+          "latest_date": "2025-10-30",
+          "null_or_zero_modal_price_count": 0,
+          "min_modal_price": 6002.941176470588,
+          "median_modal_price": 7525.0,
+          "max_modal_price": 10068.75,
+          "unit_scale_issues": [],
+          "issues": [
+            "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+          ],
+          "runtime_response_shape": "observed output.data wrapper",
+          "commodity_id": 20,
+          "matched_names_and_crops": [
+            {
+              "crop": "mango",
+              "name": "Mango"
+            }
+          ],
+          "latest_data_lag_days": 349,
+          "freshness_warning": true
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 20,
+            "matched_name": "Mango",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "17",
+                "RateLimit-Reset": "3255"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 6002.941176470588,
+              "median_modal_price": 7525.0,
+              "max_modal_price": 10068.75,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 20,
+              "matched_names_and_crops": [
+                {
+                  "crop": "mango",
+                  "name": "Mango"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "grapes",
+        "commodity_id": 22,
+        "candidate_ids": [
+          22
+        ],
+        "status": "ok",
+        "national": {
+          "http_status": 200,
+          "rate_limit_headers": {
+            "RateLimit-Policy": "40;w=3600",
+            "RateLimit-Limit": "40",
+            "RateLimit-Remaining": "16",
+            "RateLimit-Reset": "3255"
+          },
+          "row_count": 17,
+          "date_range": {
+            "from": "2025-10-14",
+            "to": "2025-10-30"
+          },
+          "latest_date": "2025-10-30",
+          "null_or_zero_modal_price_count": 0,
+          "min_modal_price": 8869.212765957447,
+          "median_modal_price": 9580.487804878048,
+          "max_modal_price": 10691.653846153846,
+          "unit_scale_issues": [],
+          "issues": [
+            "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+          ],
+          "runtime_response_shape": "observed output.data wrapper",
+          "commodity_id": 22,
+          "matched_names_and_crops": [
+            {
+              "crop": "grapes",
+              "name": "Grapes"
+            }
+          ],
+          "latest_data_lag_days": 349,
+          "freshness_warning": true
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 22,
+            "matched_name": "Grapes",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "16",
+                "RateLimit-Reset": "3255"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 8869.212765957447,
+              "median_modal_price": 9580.487804878048,
+              "max_modal_price": 10691.653846153846,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 22,
+              "matched_names_and_crops": [
+                {
+                  "crop": "grapes",
+                  "name": "Grapes"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "watermelon",
+        "commodity_id": 73,
+        "candidate_ids": [
+          73
+        ],
+        "status": "ok",
+        "national": {
+          "http_status": 200,
+          "rate_limit_headers": {
+            "RateLimit-Policy": "40;w=3600",
+            "RateLimit-Limit": "40",
+            "RateLimit-Remaining": "10",
+            "RateLimit-Reset": "3253"
+          },
+          "row_count": 17,
+          "date_range": {
+            "from": "2025-10-14",
+            "to": "2025-10-30"
+          },
+          "latest_date": "2025-10-30",
+          "null_or_zero_modal_price_count": 0,
+          "min_modal_price": 2018.421052631579,
+          "median_modal_price": 2106.808510638298,
+          "max_modal_price": 2430.34375,
+          "unit_scale_issues": [],
+          "issues": [
+            "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+          ],
+          "runtime_response_shape": "observed output.data wrapper",
+          "commodity_id": 73,
+          "matched_names_and_crops": [
+            {
+              "crop": "watermelon",
+              "name": "Water Melon"
+            }
+          ],
+          "latest_data_lag_days": 349,
+          "freshness_warning": true
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 73,
+            "matched_name": "Water Melon",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "10",
+                "RateLimit-Reset": "3253"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 2018.421052631579,
+              "median_modal_price": 2106.808510638298,
+              "max_modal_price": 2430.34375,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 73,
+              "matched_names_and_crops": [
+                {
+                  "crop": "watermelon",
+                  "name": "Water Melon"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "muskmelon",
+        "commodity_id": 187,
+        "candidate_ids": [
+          187
+        ],
+        "status": "ok",
+        "national": {
+          "http_status": 200,
+          "rate_limit_headers": {
+            "RateLimit-Policy": "40;w=3600",
+            "RateLimit-Limit": "40",
+            "RateLimit-Remaining": "5",
+            "RateLimit-Reset": "3251"
+          },
+          "row_count": 17,
+          "date_range": {
+            "from": "2025-10-14",
+            "to": "2025-10-30"
+          },
+          "latest_date": "2025-10-30",
+          "null_or_zero_modal_price_count": 0,
+          "min_modal_price": 3275.0,
+          "median_modal_price": 4085.0,
+          "max_modal_price": 6250.0,
+          "unit_scale_issues": [],
+          "issues": [
+            "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+          ],
+          "runtime_response_shape": "observed output.data wrapper",
+          "commodity_id": 187,
+          "matched_names_and_crops": [
+            {
+              "crop": "muskmelon",
+              "name": "Karbuja(Musk Melon)"
+            }
+          ],
+          "latest_data_lag_days": 349,
+          "freshness_warning": true
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 187,
+            "matched_name": "Karbuja(Musk Melon)",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "5",
+                "RateLimit-Reset": "3251"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 3275.0,
+              "median_modal_price": 4085.0,
+              "max_modal_price": 6250.0,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 187,
+              "matched_names_and_crops": [
+                {
+                  "crop": "muskmelon",
+                  "name": "Karbuja(Musk Melon)"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "apple",
+        "commodity_id": 17,
+        "candidate_ids": [
+          17
+        ],
+        "status": "ok",
+        "national": {
+          "http_status": 200,
+          "rate_limit_headers": {
+            "RateLimit-Policy": "40;w=3600",
+            "RateLimit-Limit": "40",
+            "RateLimit-Remaining": "20",
+            "RateLimit-Reset": "3256"
+          },
+          "row_count": 17,
+          "date_range": {
+            "from": "2025-10-14",
+            "to": "2025-10-30"
+          },
+          "latest_date": "2025-10-30",
+          "null_or_zero_modal_price_count": 0,
+          "min_modal_price": 5886.278757961783,
+          "median_modal_price": 6938.478787878787,
+          "max_modal_price": 8906.173387096775,
+          "unit_scale_issues": [],
+          "issues": [
+            "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+          ],
+          "runtime_response_shape": "observed output.data wrapper",
+          "commodity_id": 17,
+          "matched_names_and_crops": [
+            {
+              "crop": "apple",
+              "name": "Apple"
+            }
+          ],
+          "latest_data_lag_days": 349,
+          "freshness_warning": true
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 17,
+            "matched_name": "Apple",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "20",
+                "RateLimit-Reset": "3256"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 5886.278757961783,
+              "median_modal_price": 6938.478787878787,
+              "max_modal_price": 8906.173387096775,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 17,
+              "matched_names_and_crops": [
+                {
+                  "crop": "apple",
+                  "name": "Apple"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "orange",
+        "commodity_id": 18,
+        "candidate_ids": [
+          18
+        ],
+        "status": "ok",
+        "national": {
+          "http_status": 200,
+          "rate_limit_headers": {
+            "RateLimit-Policy": "40;w=3600",
+            "RateLimit-Limit": "40",
+            "RateLimit-Remaining": "19",
+            "RateLimit-Reset": "3256"
+          },
+          "row_count": 17,
+          "date_range": {
+            "from": "2025-10-14",
+            "to": "2025-10-30"
+          },
+          "latest_date": "2025-10-30",
+          "null_or_zero_modal_price_count": 0,
+          "min_modal_price": 5155.306122448979,
+          "median_modal_price": 6386.96875,
+          "max_modal_price": 7399.268292682927,
+          "unit_scale_issues": [],
+          "issues": [
+            "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+          ],
+          "runtime_response_shape": "observed output.data wrapper",
+          "commodity_id": 18,
+          "matched_names_and_crops": [
+            {
+              "crop": "orange",
+              "name": "Orange"
+            }
+          ],
+          "latest_data_lag_days": 349,
+          "freshness_warning": true
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 18,
+            "matched_name": "Orange",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "19",
+                "RateLimit-Reset": "3256"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 5155.306122448979,
+              "median_modal_price": 6386.96875,
+              "max_modal_price": 7399.268292682927,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 18,
+              "matched_names_and_crops": [
+                {
+                  "crop": "orange",
+                  "name": "Orange"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "papaya",
+        "commodity_id": 72,
+        "candidate_ids": [
+          72
+        ],
+        "status": "ok",
+        "national": {
+          "http_status": 200,
+          "rate_limit_headers": {
+            "RateLimit-Policy": "40;w=3600",
+            "RateLimit-Limit": "40",
+            "RateLimit-Remaining": "11",
+            "RateLimit-Reset": "3253"
+          },
+          "row_count": 17,
+          "date_range": {
+            "from": "2025-10-14",
+            "to": "2025-10-30"
+          },
+          "latest_date": "2025-10-30",
+          "null_or_zero_modal_price_count": 0,
+          "min_modal_price": 2836.3008849557523,
+          "median_modal_price": 3007.912,
+          "max_modal_price": 3184.305,
+          "unit_scale_issues": [],
+          "issues": [
+            "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+          ],
+          "runtime_response_shape": "observed output.data wrapper",
+          "commodity_id": 72,
+          "matched_names_and_crops": [
+            {
+              "crop": "papaya",
+              "name": "Papaya"
+            }
+          ],
+          "latest_data_lag_days": 349,
+          "freshness_warning": true
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 72,
+            "matched_name": "Papaya",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "11",
+                "RateLimit-Reset": "3253"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 2836.3008849557523,
+              "median_modal_price": 3007.912,
+              "max_modal_price": 3184.305,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 72,
+              "matched_names_and_crops": [
+                {
+                  "crop": "papaya",
+                  "name": "Papaya"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "coconut",
+        "commodity_id": 138,
+        "candidate_ids": [
+          138
+        ],
+        "status": "ok",
+        "national": {
+          "http_status": 200,
+          "rate_limit_headers": {
+            "RateLimit-Policy": "40;w=3600",
+            "RateLimit-Limit": "40",
+            "RateLimit-Remaining": "6",
+            "RateLimit-Reset": "3251"
+          },
+          "row_count": 17,
+          "date_range": {
+            "from": "2025-10-14",
+            "to": "2025-10-30"
+          },
+          "latest_date": "2025-10-30",
+          "null_or_zero_modal_price_count": 0,
+          "min_modal_price": 6870.0,
+          "median_modal_price": 7104.864864864865,
+          "max_modal_price": 7567.076923076923,
+          "unit_scale_issues": [],
+          "issues": [
+            "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+          ],
+          "runtime_response_shape": "observed output.data wrapper",
+          "commodity_id": 138,
+          "matched_names_and_crops": [
+            {
+              "crop": "coconut",
+              "name": "Coconut"
+            }
+          ],
+          "latest_data_lag_days": 349,
+          "freshness_warning": true
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 138,
+            "matched_name": "Coconut",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "6",
+                "RateLimit-Reset": "3251"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 6870.0,
+              "median_modal_price": 7104.864864864865,
+              "max_modal_price": 7567.076923076923,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 138,
+              "matched_names_and_crops": [
+                {
+                  "crop": "coconut",
+                  "name": "Coconut"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "cotton",
+        "commodity_id": 15,
+        "candidate_ids": [
+          15
+        ],
+        "status": "ok",
+        "national": {
+          "http_status": 200,
+          "rate_limit_headers": {
+            "RateLimit-Policy": "40;w=3600",
+            "RateLimit-Limit": "40",
+            "RateLimit-Remaining": "22",
+            "RateLimit-Reset": "3257"
+          },
+          "row_count": 17,
+          "date_range": {
+            "from": "2025-10-14",
+            "to": "2025-10-30"
+          },
+          "latest_date": "2025-10-30",
+          "null_or_zero_modal_price_count": 0,
+          "min_modal_price": 6798.476190476191,
+          "median_modal_price": 6909.3,
+          "max_modal_price": 7046.482758620689,
+          "unit_scale_issues": [],
+          "issues": [
+            "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+          ],
+          "runtime_response_shape": "observed output.data wrapper",
+          "commodity_id": 15,
+          "matched_names_and_crops": [
+            {
+              "crop": "cotton",
+              "name": "Cotton"
+            }
+          ],
+          "latest_data_lag_days": 349,
+          "freshness_warning": true
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 15,
+            "matched_name": "Cotton",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "22",
+                "RateLimit-Reset": "3257"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 6798.476190476191,
+              "median_modal_price": 6909.3,
+              "max_modal_price": 7046.482758620689,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 15,
+              "matched_names_and_crops": [
+                {
+                  "crop": "cotton",
+                  "name": "Cotton"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "jute",
+        "commodity_id": 16,
+        "candidate_ids": [
+          16
+        ],
+        "status": "ok",
+        "national": {
+          "http_status": 200,
+          "rate_limit_headers": {
+            "RateLimit-Policy": "40;w=3600",
+            "RateLimit-Limit": "40",
+            "RateLimit-Remaining": "21",
+            "RateLimit-Reset": "3256"
+          },
+          "row_count": 17,
+          "date_range": {
+            "from": "2025-10-14",
+            "to": "2025-10-30"
+          },
+          "latest_date": "2025-10-30",
+          "null_or_zero_modal_price_count": 0,
+          "min_modal_price": 8110.714285714285,
+          "median_modal_price": 8194.444444444445,
+          "max_modal_price": 8317.857142857143,
+          "unit_scale_issues": [],
+          "issues": [
+            "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+          ],
+          "runtime_response_shape": "observed output.data wrapper",
+          "commodity_id": 16,
+          "matched_names_and_crops": [
+            {
+              "crop": "jute",
+              "name": "Jute"
+            }
+          ],
+          "latest_data_lag_days": 349,
+          "freshness_warning": true
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 16,
+            "matched_name": "Jute",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "21",
+                "RateLimit-Reset": "3256"
+              },
+              "row_count": 17,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 8110.714285714285,
+              "median_modal_price": 8194.444444444445,
+              "max_modal_price": 8317.857142857143,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 16,
+              "matched_names_and_crops": [
+                {
+                  "crop": "jute",
+                  "name": "Jute"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+      },
+      {
+        "crop": "coffee",
+        "commodity_id": 45,
+        "candidate_ids": [
+          45
+        ],
+        "status": "ok",
+        "national": {
+          "http_status": 200,
+          "rate_limit_headers": {
+            "RateLimit-Policy": "40;w=3600",
+            "RateLimit-Limit": "40",
+            "RateLimit-Remaining": "15",
+            "RateLimit-Reset": "3254"
+          },
+          "row_count": 15,
+          "date_range": {
+            "from": "2025-10-14",
+            "to": "2025-10-30"
+          },
+          "latest_date": "2025-10-30",
+          "null_or_zero_modal_price_count": 0,
+          "min_modal_price": 23500.0,
+          "median_modal_price": 23800.0,
+          "max_modal_price": 24233.333333333332,
+          "unit_scale_issues": [],
+          "issues": [
+            "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+          ],
+          "runtime_response_shape": "observed output.data wrapper",
+          "commodity_id": 45,
+          "matched_names_and_crops": [
+            {
+              "crop": "coffee",
+              "name": "Coffee"
+            }
+          ],
+          "latest_data_lag_days": 349,
+          "freshness_warning": true
+        },
+        "candidate_results": [
+          {
+            "commodity_id": 45,
+            "matched_name": "Coffee",
+            "match_score": 1.0,
+            "price_result": {
+              "http_status": 200,
+              "rate_limit_headers": {
+                "RateLimit-Policy": "40;w=3600",
+                "RateLimit-Limit": "40",
+                "RateLimit-Remaining": "15",
+                "RateLimit-Reset": "3254"
+              },
+              "row_count": 15,
+              "date_range": {
+                "from": "2025-10-14",
+                "to": "2025-10-30"
+              },
+              "latest_date": "2025-10-30",
+              "null_or_zero_modal_price_count": 0,
+              "min_modal_price": 23500.0,
+              "median_modal_price": 23800.0,
+              "max_modal_price": 24233.333333333332,
+              "unit_scale_issues": [],
+              "issues": [
+                "Latest returned data is 349 days before the requested end date; older than the 30-day warning threshold."
+              ],
+              "runtime_response_shape": "observed output.data wrapper",
+              "commodity_id": 45,
+              "matched_names_and_crops": [
+                {
+                  "crop": "coffee",
+                  "name": "Coffee"
+                }
+              ],
+              "latest_data_lag_days": 349,
+              "freshness_warning": true
+            }
+          }
+        ],
+        "Andhra Pradesh": {
+          "status": "deferred_rate_limit"
+        },
+        "Telangana": {
+          "status": "deferred_rate_limit"
+        },
+        "Maharashtra": {
+          "status": "deferred_rate_limit"
+        },
+        "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+      }
+    ],
+    "rate_limit_remaining_at_start": 30,
+    "rate_limit_remaining_at_end": 1,
+    "stale_warning_days": 30
+  },
+  "assumptions": [
+    "The user-requested 12-month period means the corresponding calendar date one year before today through today, inclusive.",
+    "The user states price units should be Rs per quintal; the OpenAPI response schema itself does not document a unit.",
+    "Candidate-match scores are string-similarity indicators, not verified agronomic equivalence; multiple IDs are left unselected.",
+    "The national run used state_id=0 and the user-authorized documented read-only POST; state-specific price requests were deferred by user choice.",
+    "CEDA authentication uses an Authorization Bearer token as declared by the OpenAPI security scheme.",
+    "State ID 0 is the national aggregate because the prices request-body schema documents that meaning; this value was used for the national price requests.",
+    "A freshness warning is raised for national data older than 30 days before the requested end date; this is a conservative heuristic because the API spec documents no freshness SLA."
+  ],
+  "summary": {
+    "fully_working": [],
+    "sparse_or_missing_data": [
+      "kidneybeans",
+      "pigeonpeas",
+      "mothbeans"
+    ],
+    "not_found": [],
+    "ambiguous": [
+      "rice",
+      "chickpea",
+      "kidneybeans",
+      "pigeonpeas",
+      "mothbeans"
+    ],
+    "price_tests_blocked_by_method_constraint": false,
+    "state_price_tests_deferred": true,
+    "recommendation": "The latest returned quotes may be stale; do not treat them as current prices. For ambiguous mappings, choose the intended commodity explicitly. For stale, missing, or unavailable prices, use a cache only after verifying its freshness; otherwise use the labelled mock price.",
+    "stale_price_data": [
+      "rice",
+      "maize",
+      "chickpea",
+      "kidneybeans",
+      "pigeonpeas",
+      "mothbeans",
+      "mungbean",
+      "blackgram",
+      "lentil",
+      "pomegranate",
+      "banana",
+      "mango",
+      "grapes",
+      "watermelon",
+      "muskmelon",
+      "apple",
+      "orange",
+      "papaya",
+      "coconut",
+      "cotton",
+      "jute",
+      "coffee"
+    ]
+  },
+  "runtime_response_shapes": {
+    "commodities": "observed output.data wrapper",
+    "geographies": "observed output.data wrapper"
+  },
+  "runtime_schema_differences": [
+    "CEDA returned commodities under output.data with commodity_id/commodity_name, rather than the documented top-level commodities list with id/name.",
+    "CEDA returned geographies in a wrapped response rather than the documented top-level geographies list."
+  ],
+  "geography_check": {
+    "http_status": 200,
+    "rate_limit_headers": {
+      "RateLimit-Policy": "40;w=3600",
+      "RateLimit-Limit": "40",
+      "RateLimit-Remaining": "30",
+      "RateLimit-Reset": "3468"
+    }
+  },
+  "crop_map": {
+    "rice": {
+      "commodity_id": null,
+      "matched_name": null,
+      "confidence_flag": "ambiguous",
+      "candidates": [
+        {
+          "commodity_id": 414,
+          "name": "Paddy(Dhan)(Basmati)",
+          "score": 1.0
+        },
+        {
+          "commodity_id": 2,
+          "name": "Paddy(Dhan)(Common)",
+          "score": 1.0
+        },
+        {
+          "commodity_id": 3,
+          "name": "Rice",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Paddy (Dhan) (Common)",
+          "best_match": {
+            "commodity_id": 2,
+            "name": "Paddy(Dhan)(Common)",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 2,
+              "name": "Paddy(Dhan)(Common)",
+              "score": 1.0
+            }
+          ]
+        },
+        {
+          "candidate_name": "Paddy (Dhan) (Basmati)",
+          "best_match": {
+            "commodity_id": 414,
+            "name": "Paddy(Dhan)(Basmati)",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 414,
+              "name": "Paddy(Dhan)(Basmati)",
+              "score": 1.0
+            }
+          ]
+        },
+        {
+          "candidate_name": "Rice",
+          "best_match": {
+            "commodity_id": 3,
+            "name": "Rice",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 3,
+              "name": "Rice",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Resolve the commodity choice, then use a verified cache; otherwise use the labelled mock price."
+    },
+    "maize": {
+      "commodity_id": 4,
+      "matched_name": "Maize",
+      "confidence_flag": "high",
+      "candidates": [
+        {
+          "commodity_id": 4,
+          "name": "Maize",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Maize",
+          "best_match": {
+            "commodity_id": 4,
+            "name": "Maize",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 4,
+              "name": "Maize",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+    },
+    "chickpea": {
+      "commodity_id": null,
+      "matched_name": null,
+      "confidence_flag": "ambiguous",
+      "candidates": [
+        {
+          "commodity_id": 6,
+          "name": "Bengal Gram(Gram)(Whole)",
+          "score": 1.0
+        },
+        {
+          "commodity_id": 362,
+          "name": "Kabuli Chana(Chickpeas-White)",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Bengal Gram (Gram) (Whole)",
+          "best_match": {
+            "commodity_id": 6,
+            "name": "Bengal Gram(Gram)(Whole)",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 6,
+              "name": "Bengal Gram(Gram)(Whole)",
+              "score": 1.0
+            }
+          ]
+        },
+        {
+          "candidate_name": "Kabuli Chana (Chickpeas-White)",
+          "best_match": {
+            "commodity_id": 362,
+            "name": "Kabuli Chana(Chickpeas-White)",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 362,
+              "name": "Kabuli Chana(Chickpeas-White)",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Resolve the commodity choice, then use a verified cache; otherwise use the labelled mock price."
+    },
+    "kidneybeans": {
+      "commodity_id": null,
+      "matched_name": null,
+      "confidence_flag": "ambiguous",
+      "candidates": [
+        {
+          "commodity_id": 94,
+          "name": "Beans",
+          "score": 1.0
+        },
+        {
+          "commodity_id": 97,
+          "name": "Other Pulses",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Rajma",
+          "best_match": {
+            "commodity_id": 282,
+            "name": "Ram",
+            "score": 0.75
+          },
+          "matches_considered": []
+        },
+        {
+          "candidate_name": "Other Pulses",
+          "best_match": {
+            "commodity_id": 97,
+            "name": "Other Pulses",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 97,
+              "name": "Other Pulses",
+              "score": 1.0
+            }
+          ]
+        },
+        {
+          "candidate_name": "Beans",
+          "best_match": {
+            "commodity_id": 94,
+            "name": "Beans",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 94,
+              "name": "Beans",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Resolve the commodity choice, then use a verified cache; otherwise use the labelled mock price."
+    },
+    "pigeonpeas": {
+      "commodity_id": null,
+      "matched_name": null,
+      "confidence_flag": "ambiguous",
+      "candidates": [
+        {
+          "commodity_id": 49,
+          "name": "Arhar (Tur/Red Gram)(Whole)",
+          "score": 1.0
+        },
+        {
+          "commodity_id": 7,
+          "name": "Red Gram",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Arhar (Tur/Red Gram) (Whole)",
+          "best_match": {
+            "commodity_id": 49,
+            "name": "Arhar (Tur/Red Gram)(Whole)",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 49,
+              "name": "Arhar (Tur/Red Gram)(Whole)",
+              "score": 1.0
+            }
+          ]
+        },
+        {
+          "candidate_name": "Red Gram",
+          "best_match": {
+            "commodity_id": 7,
+            "name": "Red Gram",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 7,
+              "name": "Red Gram",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Resolve the commodity choice, then use a verified cache; otherwise use the labelled mock price."
+    },
+    "mothbeans": {
+      "commodity_id": null,
+      "matched_name": null,
+      "confidence_flag": "ambiguous",
+      "candidates": [
+        {
+          "commodity_id": 60,
+          "name": "Mash",
+          "score": 1.0
+        },
+        {
+          "commodity_id": 95,
+          "name": "Moath Dal",
+          "score": 1.0
+        },
+        {
+          "commodity_id": 258,
+          "name": "Moath Dal",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Moath Dal",
+          "best_match": {
+            "commodity_id": 95,
+            "name": "Moath Dal",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 95,
+              "name": "Moath Dal",
+              "score": 1.0
+            },
+            {
+              "commodity_id": 258,
+              "name": "Moath Dal",
+              "score": 1.0
+            }
+          ]
+        },
+        {
+          "candidate_name": "Mash",
+          "best_match": {
+            "commodity_id": 60,
+            "name": "Mash",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 60,
+              "name": "Mash",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Resolve the commodity choice, then use a verified cache; otherwise use the labelled mock price."
+    },
+    "mungbean": {
+      "commodity_id": 9,
+      "matched_name": "Green Gram (Moong)(Whole)",
+      "confidence_flag": "high",
+      "candidates": [
+        {
+          "commodity_id": 9,
+          "name": "Green Gram (Moong)(Whole)",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Green Gram (Moong) (Whole)",
+          "best_match": {
+            "commodity_id": 9,
+            "name": "Green Gram (Moong)(Whole)",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 9,
+              "name": "Green Gram (Moong)(Whole)",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+    },
+    "blackgram": {
+      "commodity_id": 8,
+      "matched_name": "Black Gram (Urd Beans)(Whole)",
+      "confidence_flag": "high",
+      "candidates": [
+        {
+          "commodity_id": 8,
+          "name": "Black Gram (Urd Beans)(Whole)",
+          "score": 0.9811
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Black Gram (Urad Beans) (Whole)",
+          "best_match": {
+            "commodity_id": 8,
+            "name": "Black Gram (Urd Beans)(Whole)",
+            "score": 0.9811
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 8,
+              "name": "Black Gram (Urd Beans)(Whole)",
+              "score": 0.9811
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+    },
+    "lentil": {
+      "commodity_id": 63,
+      "matched_name": "Lentil (Masur)(Whole)",
+      "confidence_flag": "high",
+      "candidates": [
+        {
+          "commodity_id": 63,
+          "name": "Lentil (Masur)(Whole)",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Lentil (Masur) (Whole)",
+          "best_match": {
+            "commodity_id": 63,
+            "name": "Lentil (Masur)(Whole)",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 63,
+              "name": "Lentil (Masur)(Whole)",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+    },
+    "pomegranate": {
+      "commodity_id": 190,
+      "matched_name": "Pomegranate",
+      "confidence_flag": "high",
+      "candidates": [
+        {
+          "commodity_id": 190,
+          "name": "Pomegranate",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Pomegranate",
+          "best_match": {
+            "commodity_id": 190,
+            "name": "Pomegranate",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 190,
+              "name": "Pomegranate",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+    },
+    "banana": {
+      "commodity_id": 19,
+      "matched_name": "Banana",
+      "confidence_flag": "high",
+      "candidates": [
+        {
+          "commodity_id": 19,
+          "name": "Banana",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Banana",
+          "best_match": {
+            "commodity_id": 19,
+            "name": "Banana",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 19,
+              "name": "Banana",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+    },
+    "mango": {
+      "commodity_id": 20,
+      "matched_name": "Mango",
+      "confidence_flag": "high",
+      "candidates": [
+        {
+          "commodity_id": 20,
+          "name": "Mango",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Mango",
+          "best_match": {
+            "commodity_id": 20,
+            "name": "Mango",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 20,
+              "name": "Mango",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+    },
+    "grapes": {
+      "commodity_id": 22,
+      "matched_name": "Grapes",
+      "confidence_flag": "high",
+      "candidates": [
+        {
+          "commodity_id": 22,
+          "name": "Grapes",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Grapes",
+          "best_match": {
+            "commodity_id": 22,
+            "name": "Grapes",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 22,
+              "name": "Grapes",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+    },
+    "watermelon": {
+      "commodity_id": 73,
+      "matched_name": "Water Melon",
+      "confidence_flag": "high",
+      "candidates": [
+        {
+          "commodity_id": 73,
+          "name": "Water Melon",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Water Melon",
+          "best_match": {
+            "commodity_id": 73,
+            "name": "Water Melon",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 73,
+              "name": "Water Melon",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+    },
+    "muskmelon": {
+      "commodity_id": 187,
+      "matched_name": "Karbuja(Musk Melon)",
+      "confidence_flag": "high",
+      "candidates": [
+        {
+          "commodity_id": 187,
+          "name": "Karbuja(Musk Melon)",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Karbuja (Musk Melon)",
+          "best_match": {
+            "commodity_id": 187,
+            "name": "Karbuja(Musk Melon)",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 187,
+              "name": "Karbuja(Musk Melon)",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+    },
+    "apple": {
+      "commodity_id": 17,
+      "matched_name": "Apple",
+      "confidence_flag": "high",
+      "candidates": [
+        {
+          "commodity_id": 17,
+          "name": "Apple",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Apple",
+          "best_match": {
+            "commodity_id": 17,
+            "name": "Apple",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 17,
+              "name": "Apple",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+    },
+    "orange": {
+      "commodity_id": 18,
+      "matched_name": "Orange",
+      "confidence_flag": "high",
+      "candidates": [
+        {
+          "commodity_id": 18,
+          "name": "Orange",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Orange",
+          "best_match": {
+            "commodity_id": 18,
+            "name": "Orange",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 18,
+              "name": "Orange",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+    },
+    "papaya": {
+      "commodity_id": 72,
+      "matched_name": "Papaya",
+      "confidence_flag": "high",
+      "candidates": [
+        {
+          "commodity_id": 72,
+          "name": "Papaya",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Papaya",
+          "best_match": {
+            "commodity_id": 72,
+            "name": "Papaya",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 72,
+              "name": "Papaya",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+    },
+    "coconut": {
+      "commodity_id": 138,
+      "matched_name": "Coconut",
+      "confidence_flag": "high",
+      "candidates": [
+        {
+          "commodity_id": 138,
+          "name": "Coconut",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Coconut",
+          "best_match": {
+            "commodity_id": 138,
+            "name": "Coconut",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 138,
+              "name": "Coconut",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+    },
+    "cotton": {
+      "commodity_id": 15,
+      "matched_name": "Cotton",
+      "confidence_flag": "high",
+      "candidates": [
+        {
+          "commodity_id": 15,
+          "name": "Cotton",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Cotton",
+          "best_match": {
+            "commodity_id": 15,
+            "name": "Cotton",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 15,
+              "name": "Cotton",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+    },
+    "jute": {
+      "commodity_id": 16,
+      "matched_name": "Jute",
+      "confidence_flag": "high",
+      "candidates": [
+        {
+          "commodity_id": 16,
+          "name": "Jute",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Jute",
+          "best_match": {
+            "commodity_id": 16,
+            "name": "Jute",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 16,
+              "name": "Jute",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+    },
+    "coffee": {
+      "commodity_id": 45,
+      "matched_name": "Coffee",
+      "confidence_flag": "high",
+      "candidates": [
+        {
+          "commodity_id": 45,
+          "name": "Coffee",
+          "score": 1.0
+        }
+      ],
+      "candidate_evaluations": [
+        {
+          "candidate_name": "Coffee",
+          "best_match": {
+            "commodity_id": 45,
+            "name": "Coffee",
+            "score": 1.0
+          },
+          "matches_considered": [
+            {
+              "commodity_id": 45,
+              "name": "Coffee",
+              "score": 1.0
+            }
+          ]
+        }
+      ],
+      "price_fallback": "Use a verified cached quote; otherwise use the labelled mock price."
+    }
+  }
+}

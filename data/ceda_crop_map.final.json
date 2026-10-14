@@ -1,0 +1,156 @@
+{
+  "maize": {
+    "crop": "maize",
+    "commodity_id": 4,
+    "matched_name": "Maize",
+    "proxy": false,
+    "note": null
+  },
+  "mungbean": {
+    "crop": "mungbean",
+    "commodity_id": 9,
+    "matched_name": "Green Gram (Moong) (Whole)",
+    "proxy": false,
+    "note": null
+  },
+  "blackgram": {
+    "crop": "blackgram",
+    "commodity_id": 8,
+    "matched_name": "Black Gram (Urad Beans) (Whole)",
+    "proxy": false,
+    "note": null
+  },
+  "lentil": {
+    "crop": "lentil",
+    "commodity_id": 63,
+    "matched_name": "Lentil (Masur) (Whole)",
+    "proxy": false,
+    "note": null
+  },
+  "pomegranate": {
+    "crop": "pomegranate",
+    "commodity_id": 190,
+    "matched_name": "Pomegranate",
+    "proxy": false,
+    "note": null
+  },
+  "banana": {
+    "crop": "banana",
+    "commodity_id": 19,
+    "matched_name": "Banana",
+    "proxy": false,
+    "note": null
+  },
+  "mango": {
+    "crop": "mango",
+    "commodity_id": 20,
+    "matched_name": "Mango",
+    "proxy": false,
+    "note": null
+  },
+  "grapes": {
+    "crop": "grapes",
+    "commodity_id": 22,
+    "matched_name": "Grapes",
+    "proxy": false,
+    "note": null
+  },
+  "watermelon": {
+    "crop": "watermelon",
+    "commodity_id": 73,
+    "matched_name": "Water Melon",
+    "proxy": false,
+    "note": null
+  },
+  "muskmelon": {
+    "crop": "muskmelon",
+    "commodity_id": 187,
+    "matched_name": "Karbuja (Musk Melon)",
+    "proxy": false,
+    "note": null
+  },
+  "apple": {
+    "crop": "apple",
+    "commodity_id": 17,
+    "matched_name": "Apple",
+    "proxy": false,
+    "note": null
+  },
+  "orange": {
+    "crop": "orange",
+    "commodity_id": 18,
+    "matched_name": "Orange",
+    "proxy": false,
+    "note": null
+  },
+  "papaya": {
+    "crop": "papaya",
+    "commodity_id": 72,
+    "matched_name": "Papaya",
+    "proxy": false,
+    "note": null
+  },
+  "coconut": {
+    "crop": "coconut",
+    "commodity_id": 138,
+    "matched_name": "Coconut",
+    "proxy": false,
+    "note": null
+  },
+  "cotton": {
+    "crop": "cotton",
+    "commodity_id": 15,
+    "matched_name": "Cotton",
+    "proxy": false,
+    "note": null
+  },
+  "jute": {
+    "crop": "jute",
+    "commodity_id": 16,
+    "matched_name": "Jute",
+    "proxy": false,
+    "note": null
+  },
+  "coffee": {
+    "crop": "coffee",
+    "commodity_id": 45,
+    "matched_name": "Coffee",
+    "proxy": false,
+    "note": null
+  },
+  "rice": {
+    "crop": "rice",
+    "commodity_id": 2,
+    "matched_name": "Paddy (Dhan) (Common)",
+    "proxy": false,
+    "note": "The yield lookup source records crop='rice' and yield in tonnes per hectare but does not say whether production is paddy or milled rice. Using the requested default ID 2; switch RICE_COMMODITY_ID to 3 only after confirming the yield unit basis."
+  },
+  "chickpea": {
+    "crop": "chickpea",
+    "commodity_id": 6,
+    "matched_name": "Bengal Gram (Gram) (Whole)",
+    "proxy": false,
+    "note": null
+  },
+  "pigeonpeas": {
+    "crop": "pigeonpeas",
+    "commodity_id": 49,
+    "matched_name": "Arhar (Tur/Red Gram) (Whole)",
+    "proxy": false,
+    "note": "The possible TGK Red gram/Arhar/Tur(whole) alias is excluded from TGK eligibility because it does not exactly match the configured name."
+  },
+  "mothbeans": {
+    "crop": "mothbeans",
+    "commodity_id": 95,
+    "matched_name": "Moath Dal",
+    "proxy": true,
+    "note": "Moath Dal is a processed dal proxy, not whole moth beans. Mark plans using it simulated."
+  },
+  "kidneybeans": {
+    "crop": "kidneybeans",
+    "commodity_id": null,
+    "matched_name": null,
+    "proxy": false,
+    "note": "No verified CEDA commodity ID; use the labelled mock price."
+  }
+}

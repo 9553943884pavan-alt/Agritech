@@ -1,6 +1,7 @@
-"""Public Soil Health Card and Mandi API integrations."""
+"""Public Soil Health Card, Mandi API, and CEDA price integrations."""
 
 from concurrent.futures import ThreadPoolExecutor
+import csv
 from datetime import date
 import json
 import math
@@ -22,6 +23,19 @@ MANDI_MAPPING_PATH = (
 )
 MOCK_PRICES_PATH = Path(__file__).resolve().parents[1] / "universal_data" / "crop_prices.json"
 MOCK_SOIL_PATH = Path(__file__).resolve().parents[1] / "universal_data" / "district_soil_data.json"
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
+CEDA_CROP_MAP_PATH = DATA_DIR / "ceda_crop_map.final.json"
+CEDA_PRICE_CACHE_PATH = DATA_DIR / "ceda_price_cache.csv"
+
+# The yield source identifies the crop only as "rice" and does not distinguish
+# paddy from milled rice. Keep the requested paddy default; switch to 3 (Rice)
+# only after confirming the yield-data basis and unit consistency.
+RICE_COMMODITY_ID = 2
+
+# TGK's feed response has no unit metadata. Do not enable TGK prices until its
+# owner documents that modal_price is Rs/quintal; the feed returned 11 exact
+# commodity-name matches, but none has a verified price unit.
+TGK_ELIGIBLE_CROPS = frozenset()
 
 _CACHE_SECONDS = 3600
 _cache: dict[str, tuple[float, Any]] = {}
@@ -29,6 +43,8 @@ _cache_lock = Lock()
 _mandi_request_lock = Lock()
 _mandi_rate_limit_lock = Lock()
 _mandi_retry_after = 0.0
+_ceda_price_cache: dict[str, dict[str, Any]] = {}
+_ceda_price_cache_loaded = False
 
 
 class DataSourceError(RuntimeError):
@@ -390,6 +406,57 @@ def _load_price_mappings() -> tuple[dict[str, str], dict[str, float], list[str],
     return commodities, mock_prices, supported_states, base_url.rstrip("/")
 
 
+def _load_ceda_crop_map() -> dict[str, dict[str, Any]]:
+    try:
+        with CEDA_CROP_MAP_PATH.open("r", encoding="utf-8") as map_file:
+            mapping = json.load(map_file)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise DataSourceError(f"Could not load the finalized CEDA crop map: {exc}") from exc
+    if not isinstance(mapping, dict):
+        raise DataSourceError("The finalized CEDA crop map must be a JSON object.")
+    return mapping
+
+
+def _load_ceda_price_cache() -> dict[str, dict[str, Any]]:
+    global _ceda_price_cache, _ceda_price_cache_loaded
+    if _ceda_price_cache_loaded:
+        return _ceda_price_cache
+    rows: dict[str, dict[str, Any]] = {}
+    if CEDA_PRICE_CACHE_PATH.exists():
+        try:
+            with CEDA_PRICE_CACHE_PATH.open(
+                "r", encoding="utf-8", newline=""
+            ) as cache_file:
+                for row in csv.DictReader(cache_file):
+                    crop = row.get("crop")
+                    raw_price = row.get("median_modal_rs_per_quintal")
+                    price = _valid_price(raw_price)
+                    if not crop or price is None:
+                        continue
+                    rows[crop] = {
+                        **row,
+                        "median_modal_rs_per_quintal": price,
+                        "commodity_id": (
+                            int(row["commodity_id"])
+                            if row.get("commodity_id", "").isdigit()
+                            else None
+                        ),
+                        "proxy": row.get("proxy", "").casefold() == "true",
+                        "sparse": row.get("sparse", "").casefold() == "true",
+                        "incomplete": row.get("incomplete", "").casefold() == "true",
+                    }
+        except (OSError, csv.Error, ValueError) as exc:
+            raise DataSourceError(f"Could not load CEDA historical price cache: {exc}") from exc
+    _ceda_price_cache = rows
+    _ceda_price_cache_loaded = True
+    return _ceda_price_cache
+
+
+def initialize_price_cache() -> None:
+    """Load the offline price cache once during application startup."""
+    _load_ceda_price_cache()
+
+
 def _valid_price(value: Any) -> float | None:
     try:
         price = float(str(value).replace(",", "").strip())
@@ -409,6 +476,37 @@ def _valid_arrival_date(value: Any) -> date | None:
 
 def _is_stale(arrival_date: date) -> bool:
     return (date.today() - arrival_date).days > 14
+
+
+def _ceda_label(as_of: str | None) -> str:
+    parsed_date = _valid_arrival_date(as_of)
+    month_label = parsed_date.strftime("%b %Y") if parsed_date else "unknown date"
+    return f"Historical mandi price, {month_label} (Agmarknet via CEDA)"
+
+
+def _price_detail(
+    *,
+    status: str,
+    price: float,
+    source: str,
+    as_of: str | None,
+    proxy: bool,
+    warning: str | None,
+    label: str,
+    **extra: Any,
+) -> dict[str, Any]:
+    return {
+        "status": status,
+        "price_per_quintal": round(price, 2),
+        "price_rs_per_quintal": round(price, 2),
+        "source": source,
+        "as_of": as_of,
+        "proxy": proxy,
+        "is_simulated": source == "mock" or proxy,
+        "label": label,
+        "warning": warning,
+        **extra,
+    }
 
 
 def _get_mandi_result(
@@ -521,6 +619,8 @@ def get_crop_prices(
     district: str | None = None,
 ) -> tuple[dict[str, float], dict[str, dict[str, Any]]]:
     crop_commodities, mock_prices, supported_states, base_url = _load_price_mappings()
+    ceda_map = _load_ceda_crop_map()
+    ceda_cache = _load_ceda_price_cache()
     prices: dict[str, float] = {}
     details: dict[str, dict[str, Any]] = {}
     supported_state = next(
@@ -536,7 +636,11 @@ def get_crop_prices(
         crop: str,
     ) -> tuple[tuple[float, dict[str, Any]] | None, str | None]:
         commodity = crop_commodities.get(crop)
-        if not isinstance(commodity, str) or not supported_state:
+        if (
+            crop not in TGK_ELIGIBLE_CROPS
+            or not isinstance(commodity, str)
+            or not supported_state
+        ):
             return None, None
         try:
             current_result = _get_mandi_result(
@@ -551,9 +655,13 @@ def get_crop_prices(
                 commodity,
             )
             if current_price is not None:
-                return current_price, None
+                if not current_price[1].get("is_stale", False):
+                    return current_price, None
+                source_error = "TGK quote was stale."
+            else:
+                source_error = None
         except DataSourceError as exc:
-            return None, str(exc)
+            source_error = str(exc)
         try:
             history_result = _get_mandi_result(
                 base_url,
@@ -562,25 +670,83 @@ def get_crop_prices(
             )
             state_average = _state_average_price(history_result["data"])
             if state_average is not None:
-                return state_average, None
+                if not state_average[1].get("is_stale", False):
+                    return state_average, None
+                source_error = "TGK state-average quote was stale."
         except DataSourceError as exc:
-            return None, str(exc)
-        return None, None
+            source_error = str(exc)
+        return None, source_error
 
-    with ThreadPoolExecutor(max_workers=min(3, max(1, len(crops)))) as executor:
-        live_results = dict(zip(crops, executor.map(get_live_price, crops)))
+    eligible_crops = [crop for crop in crops if crop in TGK_ELIGIBLE_CROPS]
+    if eligible_crops and supported_state:
+        with ThreadPoolExecutor(max_workers=min(3, len(eligible_crops))) as executor:
+            live_results = dict(zip(eligible_crops, executor.map(get_live_price, eligible_crops)))
+    else:
+        live_results = {}
 
     for crop in crops:
         live_result, source_error = live_results.get(crop, (None, None))
         if live_result is not None:
             live_price, detail = live_result
             prices[crop] = live_price
-            details[crop] = {
-                **detail,
-                "price_per_quintal": round(live_price, 2),
+            details[crop] = _price_detail(
+                status="live",
+                price=live_price,
+                source="tgk_live",
+                as_of=detail.get("arrival_date"),
+                proxy=False,
+                warning=None,
+                label="Live (TGK)",
+                **{
+                    key: value
+                    for key, value in detail.items()
+                    if key not in {"status", "source"}
+                },
+            ) | {
                 "commodity": crop_commodities[crop],
             }
             continue
+
+        crop_map_entry = ceda_map.get(crop, {})
+        ceda_row = ceda_cache.get(crop)
+        expected_commodity_id = (
+            RICE_COMMODITY_ID
+            if crop == "rice"
+            else crop_map_entry.get("commodity_id")
+        )
+        if (
+            ceda_row
+            and expected_commodity_id is not None
+            and ceda_row.get("commodity_id") == expected_commodity_id
+        ):
+            cached_price = _valid_price(
+                ceda_row.get("median_modal_rs_per_quintal")
+            )
+            proxy = bool(crop_map_entry.get("proxy", False))
+            is_sparse = bool(ceda_row.get("sparse"))
+            is_incomplete = bool(ceda_row.get("incomplete"))
+            if cached_price is not None and (not is_sparse and not is_incomplete):
+                proxy_warning = (
+                    "Moth bean dal price used as a proxy."
+                    if proxy
+                    else None
+                )
+                prices[crop] = cached_price
+                details[crop] = _price_detail(
+                    status="cached",
+                    price=cached_price,
+                    source="ceda_cached",
+                    as_of=ceda_row.get("as_of") or ceda_row.get("latest_date"),
+                    proxy=proxy,
+                    warning=proxy_warning,
+                    label=_ceda_label(
+                        ceda_row.get("as_of") or ceda_row.get("latest_date")
+                    ),
+                    commodity_id=expected_commodity_id,
+                    matched_name=crop_map_entry.get("matched_name"),
+                    source_name=ceda_row.get("source", "CEDA Agmarknet"),
+                )
+                continue
 
         raw_mock_price = mock_prices.get(crop)
         try:
@@ -599,26 +765,46 @@ def get_crop_prices(
             continue
 
         prices[crop] = mock_price
-        if not supported_state:
+        if crop_map_entry.get("commodity_id") is None and crop == "kidneybeans":
+            reason = "No verified CEDA commodity mapping exists; using a labelled mock price."
+        elif not supported_state:
             reason = (
                 f"The Mandi API does not cover {state or 'the unresolved state'}; "
                 f"supported states: {', '.join(supported_states)}."
             )
-        elif crop not in crop_commodities:
-            reason = f"No Mandi API commodity mapping exists for {crop}."
+        elif crop not in TGK_ELIGIBLE_CROPS and isinstance(
+            crop_commodities.get(crop), str
+        ):
+            reason = (
+                "TGK price units are not documented; using the next verified source."
+            )
         elif source_error:
             reason = f"Mandi API lookup failed: {source_error}"
+        elif ceda_row and (
+            ceda_row.get("sparse") or ceda_row.get("incomplete")
+        ):
+            reason = (
+                "The CEDA cache entry is sparse or incomplete; no eligible TGK quote "
+                "or usable cache was available."
+            )
         else:
             reason = (
-                f"No district or state-average Mandi quote was available for "
-                f"{crop_commodities[crop]} in {supported_state}."
+                "No fresh TGK quote or usable CEDA cache was available."
             )
-        details[crop] = {
-            "status": "mock",
-            "price_per_quintal": mock_price,
-            "source": "Prototype mock price",
-            "scope": "prototype_fallback",
-            "reason": reason,
-        }
+        proxy = bool(crop_map_entry.get("proxy", False))
+        proxy_warning = "Moth bean dal price used as a proxy." if proxy else None
+        prices[crop] = mock_price
+        details[crop] = _price_detail(
+            status="mock",
+            price=mock_price,
+            source="mock",
+            as_of=None,
+            proxy=proxy,
+            warning=proxy_warning,
+            label="Mock (simulated)",
+            source_name="Prototype mock price",
+            scope="prototype_fallback",
+            reason=reason,
+        )
 
     return prices, details

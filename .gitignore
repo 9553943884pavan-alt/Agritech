@@ -21,6 +21,15 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 
+# Local credentials and price-cache artifacts
+.env
+.env.*
+!.env.example
+data/tgk_sample.json
+data/ceda_price_cache.csv
+data/ceda_price_cache.meta.json
+data/ceda_cache_progress.json
+
 # Datasets (If you don't want to upload heavy CSV files, uncomment below)
 # *.csv
 
