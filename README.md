@@ -6,7 +6,7 @@
 ## Slide 1: Team Name & Details
 * **Team ID:** AG_07
 * **Team Name:** The_King
-* **Team Leader Name:** Not provided
+* **Team Leader Name:** Pavan Kumar
 * **Team Leader Mobile Number:** 9849820952
 * **Team Leader Email:** iec2025049@iiita.ac.in
 * **College Name:** IIIT Allahabad

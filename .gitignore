@@ -23,3 +23,7 @@ Thumbs.db
 
 # Datasets (If you don't want to upload heavy CSV files, uncomment below)
 # *.csv
+
+# Logs
+logs/
+*.log
