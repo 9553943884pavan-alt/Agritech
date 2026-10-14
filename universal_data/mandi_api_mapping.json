@@ -1,10 +1,34 @@
 {
-  "chickpea": "Desi Chana",
-  "pigeonpeas": "Toor (Arhar)",
-  "mungbean": "Moong",
-  "blackgram": "Urad",
-  "lentil": "Masoor",
-  "cotton": "Raw Cotton (Kapas)",
-  "rice": "Rice",
-  "coconut": "Copra"
+  "base_url": "https://mandi-api.onrender.com",
+  "supported_states": [
+    "Maharashtra",
+    "Karnataka",
+    "Uttar Pradesh",
+    "Madhya Pradesh",
+    "Punjab"
+  ],
+  "crop_commodities": {
+    "chickpea": "Bengal Gram(Gram)(Whole)",
+    "pigeonpeas": "Arhar (Tur/Red Gram)",
+    "mungbean": "Green Gram (Moong)(Whole)",
+    "blackgram": "Black Gram (Urd Beans)(Whole)",
+    "lentil": "Lentil (Masur)(Whole)",
+    "cotton": "Cotton",
+    "rice": "Rice",
+    "coconut": "Coconut",
+    "apple": "Apple",
+    "banana": "Banana",
+    "coffee": "Coffee",
+    "grapes": "Grapes",
+    "jute": "Jute",
+    "kidneybeans": "Rajmah (Kidney Beans)",
+    "maize": "Maize",
+    "mango": "Mango",
+    "mothbeans": "Moth",
+    "muskmelon": "Musk Melon (Kharbuj)",
+    "orange": "Orange",
+    "papaya": "Papaya",
+    "pomegranate": "Pomegranate",
+    "watermelon": "Water Melon"
+  }
 }

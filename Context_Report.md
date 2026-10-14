@@ -19,7 +19,7 @@
   * `crop_prices.json` (Mandi/wholesale price per quintal for 22 crops).
   * `crop_economics.json` (Cultivation costs per acre, average baseline yields, water demands).
   * `crop_name_mapping.json` (124 ministry varieties normalized to 22 standard classes).
-  * `mandi_api_mapping.json` (TGK Agro API identifiers).
+  * `mandi_api_mapping.json` (supported Mandi API states and crop commodity names).
 * **SciPy Optimization Engine (`backend/optimizer/lp_solver.py`):** Real linear programming optimization (`scipy.optimize.linprog` with HiGHS solver) to maximize profit while enforcing budget limits, total land limits, and a 65% single-crop diversification cap.
 * **Backend API (`backend/main.py`):** Integrates live Geocoding, 90-day historical meteorology, soil lookup, and calls the SciPy optimizer.
 * **Frontend Web App (`frontend/`):** React + Vite dashboard with Web Speech API for voice inputs, live on Vercel (`https://crops-henna.vercel.app/`).

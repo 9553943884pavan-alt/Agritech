@@ -26,7 +26,7 @@
 * **The Core Idea:** A Unified, End-to-End Agri-Financial Web Platform.
 * **How it Solves the Problem:**
   * **1. Centralized Intelligence:** We bring Soil Data, Weather Data, Crop Yield Predictions, and Market Prices into one single dashboard.
-  * **2. Farmer-Friendly Inputs:** The farmer ONLY provides their Village Name, Total Land, and Budget. We handle the rest.
+  * **2. Farmer-Friendly Inputs:** The farmer provides their Village Name, Total Land, and Budget. The app uses compatible public SoilGrids pH estimates when available and clearly labelled location-based static mock values for classifier features that are missing or incompatible. Farmer soil-test readings can override those sources.
   * **3. Actionable Output:** Instead of just saying "Grow Rice," the website acts as a financial advisor, calculating the mathematically perfect acreage split to maximize profit while keeping within the farmer's budget limits.
 
 ---
@@ -37,7 +37,7 @@
   * Inputs are highly technical and not user-friendly.
   * Outputs are generic (Classification only) and lack economic budgeting.
 * **Our Proposed System:**
-  * **Unified Ecosystem:** Everything from soil profiling to market pricing happens automatically in the background.
+  * **Unified Ecosystem:** Weather, available Soil Health Card summaries, SoilGrids estimates, and market prices are retrieved automatically; missing soil fields use visibly labelled mock values for the prototype.
   * **Operations Research + ML:** We don't just predict; we optimize using Linear Programming.
   * **Vernacular UI:** Voice-first inputs in local languages making it accessible to rural India.
 
@@ -47,12 +47,15 @@
 *(Our innovations span across Models, Data, UX, and Economics)*
 
 * **🤖 Advanced ML & Optimization Engine**
-  * Seamlessly chaining *Random Forest* (for crop suitability) with *XGBoost* (for yield prediction) and *SciPy Linear Programming* (for budget/land optimization).
+  * Seamlessly chaining *Random Forest* (for crop suitability) with a *crop/state/season hierarchical median yield lookup* and *SciPy Linear Programming* (for budget/land optimization).
 * **🎙️ Zero-Friction Farmer UX**
-  * Integrated Web Speech API for voice inputs in local languages. The system completely bypasses the need for the farmer to manually enter chemical NPK values.
+  * Integrated Web Speech API for voice inputs in local languages. Public model estimates, farmer-provided measurements, and static mock fallbacks are identified separately.
 * **📊 Intelligent Data Integration & APIs**
   * **Data Cleaning:** Custom NLP mapping to condense 124 scattered Indian crop names into 22 highly accurate AI target classes.
-  * **Historical Accuracy:** We use a 90-Day Historical Archive API instead of generic daily weather. *(Fact Checked: Our API pulled 30.5°C and 345mm rain for Tenali, AP, perfectly matching IMD climate stats, guaranteeing our ML input is 100% accurate).*
+  * **Historical Weather:** We use a 90-Day Historical Archive API instead of generic daily weather.
+  * **Soil Inputs:** The Soil Health Card portal provides district/block nutrient-category counts. SoilGrids provides mapped pH predictions when available; its total-nitrogen units do not match the classifier's N feature, and it does not provide the classifier's P/K features. Missing compatible features use location-keyed static mock values, clearly labelled in the UI; any plan using them is marked simulated.
+  * **Scalability:** The soil source resolver keeps source provenance separate from classifier inputs. Prototype mock entries can be replaced by a validated, credentialed provider once access is available and its coverage, units, and feature definitions are verified; an API key alone does not make incompatible values comparable.
+  * **Market Prices:** The public Mandi API provides market-level prices for Maharashtra, Karnataka, Uttar Pradesh, Madhya Pradesh, and Punjab. The prototype averages the latest reports for the resolved district, falls back to the API's state-average history, then uses clearly labelled mock prices if no quote is available. Quotes older than 14 days are identified as stale; plans with mock or stale prices are marked simulated.
 * **📐 Indian Agricultural Unit Conversions**
   * Algorithms natively handle the conversion of government data (Hectares/Tonnes) into farmer-understandable Indian metrics (**Acres and Quintals**), ensuring the optimization math never crashes.
 
@@ -64,7 +67,8 @@
   * To maximize farmer household profit while preventing the over-utilization of water and fertilizer budgets.
 * **Scope:**
   * Specifically calibrated for the 22 most highly cultivated crops in India.
-  * Uses a scalable District-to-Soil mapping dictionary, allowing it to easily expand across all Indian states.
+  * Live Mandi API coverage is available for Maharashtra, Karnataka, Uttar Pradesh, Madhya Pradesh, and Punjab; individual crop/state quotes can be missing, in which case the UI labels prototype mock prices.
+  * Displays public Soil Health Card category summaries when available; uses compatible SoilGrids pH estimates and clearly labelled static mock values for unavailable or incompatible classifier inputs.
 
 ---
 
@@ -82,18 +86,22 @@ graph TD
     %% APIs
     A -->|Location| B(Geocoding API)
     B -->|Lat/Lon| D(Meteorology API: 90-Day History)
-    B -->|District Name| C(Static Soil Health Map)
+    B -->|State + District| C(Soil Health Card Portal: district summaries)
+    B -->|Coordinates| Q[SoilGrids mapped soil properties]
     
     %% AI Model 1: Classifier
-    C -->|N, P, K, pH| E[Random Forest Classifier]
+    C -->|Category summaries for display| S[Soil source and mock-value resolver]
+    Q -->|Compatible pH estimate when available| S
+    S -->|Public estimate, farmer test, or labelled mock values| E[Random Forest Classifier]
     D -->|90-Day Temp/Rain| E
     
     %% The Output of Classifier feeds the next steps
-    E -->|Outputs Top 3 Crops| F[XGBoost Regressor]
-    E -->|Outputs Top 3 Crops| G[Live Mandi API]
+    E -->|Outputs Top 3 Crops| F[Crop/State/Season Median Yield Lookup]
+    E -->|Outputs Top 3 Crops| G[Mandi API district/state average + labelled mock prices]
     
     %% AI Model 2 & APIs for Optimization
     B -->|State/District| F
+    B -->|State/District| G
     F -->|Outputs Yield Tonnes| H[SciPy Linear Programming]
     G -->|Outputs Market Prices| H
     A -->|Land & Budget Limits| H
@@ -109,13 +117,13 @@ graph TD
 
 ## Slide 8: Detailed Resources Required
 * **Machine Learning & Math:**
-  * Scikit-Learn (Random Forest), XGBoost, SciPy (Linear Programming).
+  * Scikit-Learn (Random Forest), hierarchical median yield lookup, SciPy (Linear Programming).
 * **Data Sources (Kaggle):**
   * *Crop Recommendation Dataset* (Soil/Weather profiling).
   * *India Agriculture Crop Production* (Historical Yield analytics).
 * **Live APIs & Mapping:**
   * **Open-Meteo:** For Geocoding and 90-Day Historical Climate Data.
-  * **Mandi API / Static Economics:** For fetching Live Crop Prices per Quintal.
+  * **Public Mandi API:** `https://mandi-api.onrender.com/v1/prices` provides market reports and `https://mandi-api.onrender.com/v1/prices/history` provides state-average history for Maharashtra, Karnataka, Uttar Pradesh, Madhya Pradesh, and Punjab. The prototype aggregates latest reports in the geocoded district when available, then uses the API state average; unavailable crop/state quotes use labelled prototype mock prices. Data older than 14 days is marked stale, and any plan using mock or stale market prices is marked simulated.
 * **Full-Stack Technologies:**
   * **Backend:** Python & FastAPI (for lightning-fast model inference).
   * **Frontend:** React + Vite + Vanilla CSS (for Glassmorphism & Voice API integration).
@@ -128,4 +136,5 @@ graph TD
   
 * **💻 Working Prototype:**
   * **Link:** `https://crops-henna.vercel.app/`
-  * **Description:** We have successfully built a full-stack prototype of the "Zero-Friction" architecture. The React frontend allows farmers to input their constraints using voice. The FastAPI backend live-fetches Geolocation and 90-Day Weather data, applies our District Soil Dictionary, and mathematically outputs a beautiful, visual dashboard detailing exactly how many acres of each crop to plant for maximum profit.
+  * **Description:** The React frontend accepts location, land, and budget. The FastAPI backend resolves the district, displays Soil Health Card category summaries when available, uses compatible SoilGrids pH estimates and clearly labelled static mock values for unavailable or incompatible classifier features, then combines historical weather, the trained classifier, state/season yield medians, district/state Mandi API prices, and prototype mock prices in the optimizer. Plans that use mock soil, mock prices, or stale prices are explicitly marked simulated.
+  * **Local API:** Set `VITE_API_URL=http://127.0.0.1:8000` before `npm run dev` to route the local frontend to the local FastAPI backend. Deployment should set `VITE_API_URL` to the deployed backend URL.

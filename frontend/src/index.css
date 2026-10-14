@@ -199,6 +199,17 @@ body {
   letter-spacing: 0.5px;
 }
 
+.simulation-warning {
+  margin: -20px 0 30px;
+  padding: 18px;
+  border: 2px solid #f97316;
+  border-radius: 16px;
+  color: #ffedd5;
+  background: rgba(124, 45, 18, 0.55);
+  text-align: center;
+  font-weight: 800;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -329,4 +340,99 @@ body {
 @keyframes pulse-text {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
+}
+
+.soil-test-panel {
+  padding: 22px;
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.soil-test-panel h3 {
+  color: #fde68a;
+  margin-bottom: 8px;
+}
+
+.soil-test-panel > p {
+  color: #cbd5e1;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+
+.soil-test-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.soil-test-grid .input-group label {
+  font-size: 0.8rem;
+}
+
+.soil-test-grid .input-group input {
+  padding: 14px 16px;
+}
+
+.soil-summary {
+  margin-bottom: 18px;
+  color: #bae6fd;
+}
+
+.soil-summary summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.soil-summary pre {
+  margin-top: 10px;
+  padding: 12px;
+  overflow-x: auto;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+}
+
+.error-banner {
+  padding: 16px 18px;
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.35);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  border-radius: 14px;
+  line-height: 1.5;
+}
+
+.mandi-price-list {
+  display: grid;
+  gap: 10px;
+  margin: -18px 0 28px;
+}
+
+.mandi-price-item {
+  padding: 14px 18px;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+}
+
+.mandi-price-item strong {
+  margin-right: 8px;
+  color: #f1f5f9;
+  text-transform: capitalize;
+}
+
+@media (max-width: 640px) {
+  .glass-panel {
+    padding: 28px 20px;
+  }
+
+  .soil-test-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .allocation-stats {
+    flex-direction: column;
+    gap: 6px;
+  }
 }
