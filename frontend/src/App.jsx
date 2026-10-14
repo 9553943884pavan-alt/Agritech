@@ -1,11 +1,21 @@
-import { useState } from 'react';
-import {
-  PriceSimulationBanner,
-  PriceSources
-} from './PriceSources.jsx';
+import { lazy, Suspense, useState } from 'react';
 import { hasSimulatedPrice } from './priceSimulation.js';
 
+const ResultsDashboard = lazy(() => import('./ResultsDashboard.jsx'));
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://agritech-1euc.onrender.com';
+
+function errorMessageFromResponse(detail) {
+  if (typeof detail === 'string') return detail;
+  if (detail?.message) return detail.message;
+  if (Array.isArray(detail)) {
+    return detail.map((item) => {
+      const location = Array.isArray(item.loc) ? item.loc.slice(1).join('.') : '';
+      return location ? `${location}: ${item.msg}` : item.msg;
+    }).filter(Boolean).join('; ');
+  }
+  return 'Could not generate a crop plan.';
+}
 
 function App() {
   const [location, setLocation] = useState('');
@@ -91,7 +101,7 @@ function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          location: location,
+          location: location.trim(),
           budget: parseFloat(budget),
           land_acres: parseFloat(land),
           ...(soilTestRequired && {
@@ -105,7 +115,13 @@ function App() {
         })
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        setError(`The crop-planning service returned an unreadable response (HTTP ${response.status}).`);
+        return;
+      }
       if (!response.ok) {
         const detail = data.detail;
         if (response.status === 428 && detail?.code === 'soil_test_required') {
@@ -116,7 +132,16 @@ function App() {
         if (detail?.mandi_prices) {
           setMandiFailures(detail.mandi_prices);
         }
-        setError(typeof detail === 'string' ? detail : detail?.message || 'Could not generate a crop plan.');
+        setError(errorMessageFromResponse(detail));
+        return;
+      }
+
+      if (
+        !data
+        || !Array.isArray(data.allocations)
+        || !Number.isFinite(data.total_estimated_profit)
+      ) {
+        setError('The crop-planning service response is missing optimizer results. Please try again.');
         return;
       }
 
@@ -149,6 +174,7 @@ function App() {
                   value={location}
                   onChange={(e) => updateLocation(e.target.value)}
                   required
+                  minLength={2}
                   style={{ flex: 1 }}
                 />
                 <button 
@@ -168,6 +194,8 @@ function App() {
               <input 
                 type="number" 
                 placeholder="e.g., 50000" 
+                min="0.01"
+                step="any"
                 value={budget}
                 onChange={(e) => setBudget(e.target.value)}
                 required
@@ -179,6 +207,8 @@ function App() {
               <input 
                 type="number" 
                 placeholder="e.g., 10" 
+                min="0.01"
+                step="any"
                 value={land}
                 onChange={(e) => setLand(e.target.value)}
                 required
@@ -217,8 +247,8 @@ function App() {
                       <input
                         id={`soil-${field}`}
                         type="number"
-                        min="0"
-                        max={field === 'ph' ? '14' : undefined}
+                        min={field === 'ph' ? '0.01' : '0'}
+                        max={field === 'potassium' ? '500' : field === 'ph' ? '14' : '300'}
                         step="any"
                         value={soilTest[field]}
                         onChange={(event) => setSoilTest({ ...soilTest, [field]: event.target.value })}
@@ -257,90 +287,16 @@ function App() {
         )}
 
         {result && !loading && (
-          <div className="results-dashboard fade-in">
-            <div className="success-banner">
-              {result.message}
-            </div>
-            <PriceSimulationBanner
-              planIsSimulated={result.plan_is_simulated}
-              soilDataIsSimulated={result.soil_data_is_simulated}
+          <Suspense fallback={<div className="dashboard-loading" aria-busy="true" />}>
+            <ResultsDashboard
+              result={result}
+              priceDetails={priceDetails}
               priceDataIsSimulated={priceDataIsSimulated}
-              prices={priceDetails}
+              landInput={land}
+              budgetInput={budget}
+              onReset={() => setResult(null)}
             />
-            
-            <div className="dashboard-grid">
-              <div className="glass-card stat-card">
-                <h3>{result.plan_is_simulated ? 'Simulated Profit Estimate' : 'Total Estimated Profit'}</h3>
-                <div className="profit-value">₹{result.total_estimated_profit.toLocaleString()}</div>
-              </div>
-              
-              <div className="glass-card auto-data-card">
-                <h3>Data used for this plan</h3>
-                <div className="data-badges">
-                  <span>Location: {result.resolved_location}</span>
-                  <span style={{color: '#fde047'}}>Temp: {result.regional_data.temperature}°C</span>
-                  <span style={{color: '#60a5fa'}}>Rain: {result.regional_data.rainfall}mm</span>
-                  {[
-                    ['nitrogen', 'N'],
-                    ['phosphorus', 'P'],
-                    ['potassium', 'K'],
-                    ['ph', 'pH']
-                  ].map(([feature, label]) => (
-                    <span key={feature}>
-                      {label}: {result.regional_data[feature]} (
-                      {result.soil_data_provenance?.[feature]?.status === 'mock'
-                        ? 'MOCK'
-                        : result.soil_data_provenance?.[feature]?.status === 'api_estimate'
-                          ? 'SoilGrids estimate'
-                          : 'farmer test'})
-                    </span>
-                  ))}
-                </div>
-                <p className="soil-source-note">{result.soil_source_details?.note}</p>
-                {result.soil_source_details?.soilgrids?.api_error && (
-                  <p className="soil-source-note">
-                    SoilGrids request unavailable; fallback values are labelled MOCK.
-                  </p>
-                )}
-                {result.soil_health_source_error && (
-                  <p className="soil-source-note">
-                    Soil Health Card district summary could not be retrieved.
-                  </p>
-                )}
-                {result.soil_health_summary && (
-                  <details className="soil-summary">
-                    <summary>
-                      Soil Health Card district categories ({result.soil_health_summary.district},
-                      {' '}{result.soil_health_summary.cycle})
-                    </summary>
-                    <pre>{JSON.stringify(result.soil_health_summary.category_counts, null, 2)}</pre>
-                  </details>
-                )}
-              </div>
-            </div>
-
-            <h3 className="section-title">Market prices</h3>
-            <PriceSources prices={priceDetails} />
-
-            <h3 className="section-title">Optimized Land Allocation</h3>
-            <div className="allocation-list">
-              {result.allocations.map((item, idx) => (
-                <div key={idx} className="allocation-item">
-                  <div className="crop-name">{item.crop}</div>
-                  <div className="progress-container">
-                    <div className="progress-bar" style={{ width: `${(item.allocated_acres / land) * 100}%` }}></div>
-                  </div>
-                  <div className="allocation-stats">
-                    <span><strong>{item.allocated_acres}</strong> Acres</span>
-                    <span>Expected Yield: {item.expected_yield_tonnes} Tonnes</span>
-                    <span className="profit-text">+₹{item.profit_est.toLocaleString()}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <button className="reset-button" onClick={() => setResult(null)}>Plan Another Farm</button>
-          </div>
+          </Suspense>
         )}
         
       </div>

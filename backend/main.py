@@ -14,16 +14,21 @@ Protocol: Rules.md - pathlib, no hardcoded paths, ASCII-safe output, random_stat
 """
 
 import json
+import logging
+import os
 import statistics
+import urllib.error
 import urllib.request
 import urllib.parse
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import date, timedelta
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import joblib
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -71,6 +76,8 @@ class OptimizeRequest(BaseModel):
 # ── Resolve paths dynamically (Rules: pathlib relative to __file__) ───────────
 BACKEND_DIR       = Path(__file__).resolve().parent
 PROJECT_ROOT      = BACKEND_DIR.parent
+load_dotenv(PROJECT_ROOT / ".env")
+logger = logging.getLogger(__name__)
 
 # ML model artifacts
 CLS_DIR = PROJECT_ROOT / "ml" / "experiments" / "classifier" / "models"
@@ -81,9 +88,159 @@ _clf          = None
 _clf_meta     = None
 _reg_meta     = None       # kept for logging/metadata only
 _yield_lookup = None       # v3 recent district-aware historical yield lookup
+_shap_explainer = None
+
+
+def _generate_ai_reasoning(
+    *,
+    farmer_inputs: dict[str, Any],
+    classifier_reasoning: dict[str, Any],
+    optimizer_reasoning: dict[str, Any],
+    optimization_result: dict[str, Any],
+    recommended_crops: list[str],
+    optimized_crops: list[str],
+    crop_economics: dict[str, Any],
+) -> dict[str, Any]:
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        return {"status": "not_configured", "error_code": "missing_api_key"}
+
+    model = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite").strip()
+    evidence = {
+        "farmer_inputs": farmer_inputs,
+        "classifier": classifier_reasoning,
+        "recommended_crops": recommended_crops,
+        "crops_used_by_optimizer": optimized_crops,
+        "crops_excluded_from_optimizer": [
+            crop for crop in recommended_crops if crop not in optimized_crops
+        ],
+        "crop_economics": crop_economics,
+        "optimizer": optimizer_reasoning,
+        "optimization_result": optimization_result,
+    }
+    system_prompt = (
+        "You explain a crop recommendation and an optimization plan to a farmer and judges. "
+        "Use only the supplied JSON evidence. Do not invent agronomic facts, data, causes, "
+        "market trends, or guarantees. Explain that classifier SHAP values describe model "
+        "attribution, not causation, and model scores are not calibrated success probabilities. "
+        "Explain that the optimizer maximizes estimated net profit only among crops with usable "
+        "yield and price inputs, subject to the reported land, budget, and crop limits. "
+        "If a crop was excluded, state that data was missing rather than implying it was inferior. "
+        "If optimizer status is fallback, say the allocation is not an LP optimum. "
+        "Return only a JSON object with these fields: classifier_summary (string), "
+        "classifier_reasons (array of {crop, reason}, one for every recommended crop), "
+        "optimizer_summary (string), allocation_reasons (array of {crop, reason}, one for every "
+        "allocation). Keep each reason concise and evidence-grounded."
+    )
+    body = json.dumps({
+        "systemInstruction": {"parts": [{"text": system_prompt}]},
+        "contents": [{
+            "role": "user",
+            "parts": [{"text": json.dumps(evidence, allow_nan=False)}],
+        }],
+        "generationConfig": {
+            "temperature": 0.1,
+            "maxOutputTokens": 1400,
+            "responseMimeType": "application/json",
+        },
+    }).encode("utf-8")
+    request = urllib.request.Request(
+        f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+        data=body,
+        headers={
+            "x-goog-api-key": api_key,
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            provider_response = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        logger.warning("Gemini reasoning request failed with HTTP status %s.", exc.code)
+        return {
+            "status": "error",
+            "error_code": f"provider_http_{exc.code}",
+        }
+    except (urllib.error.URLError, TimeoutError):
+        logger.warning("Gemini reasoning request could not reach the provider.")
+        return {"status": "error", "error_code": "provider_unavailable"}
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        logger.warning("Gemini reasoning provider returned a malformed response.")
+        return {"status": "error", "error_code": "invalid_provider_response"}
+
+    try:
+        content = provider_response["candidates"][0]["content"]["parts"][0]["text"]
+        generated = json.loads(content)
+        classifier_reasons = _validate_reason_items(
+            generated["classifier_reasons"], recommended_crops
+        )
+        allocation_names = [
+            allocation["crop"]
+            for allocation in optimization_result.get("allocations", [])
+        ]
+        allocation_reasons = _validate_reason_items(
+            generated["allocation_reasons"], allocation_names
+        )
+        classifier_summary = generated["classifier_summary"]
+        optimizer_summary = generated["optimizer_summary"]
+        if (
+            not isinstance(classifier_summary, str)
+            or not classifier_summary.strip()
+            or not isinstance(optimizer_summary, str)
+            or not optimizer_summary.strip()
+        ):
+            raise ValueError("Summaries must be non-empty strings.")
+        if len(classifier_summary) > 800 or len(optimizer_summary) > 800:
+            raise ValueError("Summaries exceed the supported length.")
+    except (IndexError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+        logger.warning("Gemini reasoning provider returned content outside the expected schema.")
+        return {"status": "error", "error_code": "invalid_reasoning_schema"}
+
+    return {
+        "status": "ready",
+        "model": model,
+        "classifier_summary": classifier_summary.strip(),
+        "classifier_reasons": classifier_reasons,
+        "optimizer_summary": optimizer_summary.strip(),
+        "allocation_reasons": allocation_reasons,
+    }
+
+
+def _validate_reason_items(
+    items: Any,
+    expected_crops: list[str],
+) -> list[dict[str, str]]:
+    if not isinstance(items, list):
+        raise ValueError("Reason items must be a list.")
+    expected_by_key = {crop.casefold(): crop for crop in expected_crops}
+    reasons: dict[str, str] = {}
+    for item in items:
+        if not isinstance(item, dict):
+            raise ValueError("Reason item must be an object.")
+        crop = item.get("crop")
+        reason = item.get("reason")
+        canonical_crop = (
+            expected_by_key.get(crop.strip().casefold())
+            if isinstance(crop, str)
+            else None
+        )
+        if (
+            canonical_crop is None
+            or not isinstance(reason, str)
+            or not reason.strip()
+            or len(reason) > 500
+            or canonical_crop in reasons
+        ):
+            raise ValueError("Reason item does not match the expected crop list.")
+        reasons[canonical_crop] = reason.strip()
+    if set(reasons) != set(expected_crops):
+        raise ValueError("Reason items do not cover every expected crop.")
+    return [{"crop": crop, "reason": reasons[crop]} for crop in expected_crops]
 
 def _load_models():
-    global _clf, _clf_meta, _reg_meta, _yield_lookup
+    global _clf, _clf_meta, _reg_meta, _yield_lookup, _shap_explainer
+    _shap_explainer = None
 
     clf_path  = CLS_DIR / "rf_classifier_v1.joblib"
     cmeta_path = CLS_DIR / "rf_classifier_v1_meta.json"
@@ -117,24 +274,110 @@ def _load_models():
 _load_models()
 
 # ── Classifier helper ─────────────────────────────────────────────────────────
-def _predict_top_crops(n: float, p: float, k: float,
-                        temperature: float, humidity: float,
-                        ph: float, rainfall: float,
-                        top_k: int = 3) -> list[str]:
-    """
-    Returns top_k most suitable crop names using the trained RF Classifier.
-    """
+def _predict_crop_recommendations(
+    n: float,
+    p: float,
+    k: float,
+    temperature: float,
+    humidity: float,
+    ph: float,
+    rainfall: float,
+    top_k: int = 3,
+) -> tuple[list[str], dict[str, Any]]:
+    """Return ranked crops and SHAP evidence from the Random Forest."""
+    global _shap_explainer
     if _clf is None or _clf_meta is None:
         raise HTTPException(
             status_code=503,
             detail="The trained crop classifier is unavailable; no crop plan was generated.",
         )
-    inp = np.array([[n, p, k, temperature, humidity, ph, rainfall]], dtype=np.float32)
-    probs = _clf.predict_proba(inp)[0]
+    feature_values = {
+        "N": n,
+        "P": p,
+        "K": k,
+        "temperature": temperature,
+        "humidity": humidity,
+        "ph": ph,
+        "rainfall": rainfall,
+    }
+    feature_cols = _clf_meta["feature_cols"]
+    if len(feature_cols) != len(feature_values) or set(feature_cols) != set(feature_values):
+        raise HTTPException(
+            status_code=503,
+            detail="The crop classifier feature metadata is incompatible; no crop plan was generated.",
+        )
     classes = _clf_meta["classes"]
-    top_idx = np.argsort(probs)[::-1][:top_k]
-    return [classes[i] for i in top_idx]
+    expected_class_ids = np.arange(len(classes))
+    if not np.array_equal(_clf.classes_, expected_class_ids) or not _clf.estimators_:
+        raise HTTPException(
+            status_code=503,
+            detail="The crop classifier class metadata is incompatible; no crop plan was generated.",
+        )
+    inp = np.array(
+        [[feature_values[feature] for feature in feature_cols]],
+        dtype=np.float32,
+    )
+    probs = _clf.predict_proba(inp)[0]
+    positive_class_indices = np.flatnonzero(probs > 0)
+    top_idx = positive_class_indices[
+        np.argsort(probs[positive_class_indices])[::-1][:top_k]
+    ]
+    if _shap_explainer is None:
+        import shap
 
+        _shap_explainer = shap.TreeExplainer(_clf)
+    raw_values = _shap_explainer.shap_values(inp, check_additivity=True)
+    if isinstance(raw_values, list):
+        shap_values = np.stack([np.asarray(values)[0] for values in raw_values], axis=-1)
+    else:
+        raw_array = np.asarray(raw_values)
+        if raw_array.shape == (1, len(feature_cols), len(classes)):
+            shap_values = raw_array[0]
+        elif raw_array.shape == (len(classes), 1, len(feature_cols)):
+            shap_values = raw_array[:, 0, :].T
+        else:
+            raise HTTPException(
+                status_code=503,
+                detail="The classifier SHAP output shape is incompatible; no crop plan was generated.",
+            )
+    expected_values = np.asarray(_shap_explainer.expected_value).reshape(-1)
+    if shap_values.shape != (len(feature_cols), len(classes)) or len(expected_values) != len(classes):
+        raise HTTPException(
+            status_code=503,
+            detail="The classifier SHAP metadata is incompatible; no crop plan was generated.",
+        )
+
+    crops = []
+    for rank, class_index in enumerate(top_idx, start=1):
+        contributions = [
+            {
+                "feature": feature,
+                "value": feature_values[feature],
+                "shap_value": float(shap_values[i, class_index]),
+            }
+            for i, feature in enumerate(feature_cols)
+        ]
+        baseline_score = float(expected_values[class_index])
+        reconstructed_score = baseline_score + sum(
+            item["shap_value"] for item in contributions
+        )
+        if not np.isclose(reconstructed_score, probs[class_index], atol=1e-5, rtol=1e-4):
+            raise HTTPException(
+                status_code=503,
+                detail="Classifier SHAP values do not match the reported model score.",
+            )
+        crops.append({
+            "crop": classes[class_index],
+            "rank": rank,
+            "score": float(probs[class_index]),
+            "baseline_score": baseline_score,
+            "feature_contributions": contributions,
+        })
+
+    return [classes[i] for i in top_idx], {
+        "method": "random_forest_shap",
+        "crops": crops,
+    }
 
 # ── Yield estimator (v3 — district-aware historical lookup) ──────────────────
 # EXP_REG_01 (XGBoost) was retired: Yield = Production/Area is a mathematical
@@ -330,7 +573,7 @@ def optimize_farm(req: OptimizeRequest):
         soil_data["potassium"],
         soil_data["ph"],
     )
-    candidates = _predict_top_crops(
+    candidates, classifier_reasoning = _predict_crop_recommendations(
         n=n, p=p, k=k,
         temperature=temp,
         humidity=humidity,
@@ -408,6 +651,51 @@ def optimize_farm(req: OptimizeRequest):
         custom_yields={crop: custom_yields[crop] for crop in optimized_crops},
         custom_prices={crop: crop_prices[crop] for crop in optimized_crops},
     )
+    optimizer_reasoning = getattr(lp_result, "reasoning", None) or {}
+    optimization_result = {
+        "status": lp_result.status,
+        "total_estimated_profit": lp_result.total_estimated_profit,
+        "utilized_budget": lp_result.utilized_budget,
+        "allocated_land_acres": lp_result.allocated_land_acres,
+        "allocations": lp_result.allocations,
+    }
+    crop_economics = {
+        crop: {
+            "yield_estimate_tonnes_per_hectare": custom_yields.get(crop),
+            "price_rs_per_quintal": crop_prices.get(crop),
+            "price_source": mandi_details.get(crop, {}).get("source"),
+            "price_status": mandi_details.get(crop, {}).get("status"),
+            "price_proxy": mandi_details.get(crop, {}).get("proxy", False),
+            "price_simulated": mandi_details.get(crop, {}).get("is_simulated", False),
+            "eligible_for_optimizer": crop in optimized_crops,
+            "exclusion_reason": (
+                None if crop in optimized_crops
+                else "missing_yield" if custom_yields.get(crop) is None
+                else "missing_price" if crop not in crop_prices
+                else "not_eligible"
+            ),
+        }
+        for crop in candidates
+    }
+    ai_reasoning = _generate_ai_reasoning(
+        farmer_inputs={
+            "soil": {"N": n, "P": p, "K": k, "pH": ph},
+            "weather": {
+                "average_temperature_c": temp,
+                "average_humidity_percent": humidity,
+                "rainfall_total_mm": rain,
+            },
+            "season": season,
+            "land_acres": req.land_acres,
+            "budget_rs": req.budget,
+        },
+        classifier_reasoning=classifier_reasoning,
+        optimizer_reasoning=optimizer_reasoning,
+        optimization_result=optimization_result,
+        recommended_crops=candidates,
+        optimized_crops=optimized_crops,
+        crop_economics=crop_economics,
+    )
 
     return {
         "status": lp_result.status,
@@ -432,7 +720,10 @@ def optimize_farm(req: OptimizeRequest):
             ),
         },
         "top_crops_recommended": candidates,
+        "classifier_reasoning": classifier_reasoning,
         "optimized_crops": optimized_crops,
+        "optimizer_reasoning": optimizer_reasoning,
+        "ai_reasoning": ai_reasoning,
         "mandi_prices": mandi_details,
         "price_metadata": {
             crop: {

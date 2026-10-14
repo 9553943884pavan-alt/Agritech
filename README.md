@@ -137,6 +137,15 @@ graph TD
     class L,W sim;
 ```
 
+### Recommendation and plan explanations
+
+The optimize response includes `classifier_reasoning`, `optimizer_reasoning`, and `ai_reasoning` for the results page:
+
+* The classifier explanation shows each positively scored recommended crop's Random Forest ranking score and SHAP feature values. It returns up to three crops and omits zero-score classes, which are not meaningful recommendations. Scores are not calibrated odds of success, and SHAP values describe model attribution, not causation.
+* The optimizer explanation shows yield and price conversions, estimated revenue/cost/net profit per acre, crop allocations, and land/budget/diversification limits. The linear program maximizes estimated net profit only across recommended crops with usable yield and price data. If the solver falls back to a proportional split, the response labels it as a fallback rather than an optimum.
+* When `GEMINI_API_KEY` is configured, the backend sends classifier SHAP evidence, numerical farm inputs, crop economics, optimizer constraints, and allocations to Gemini (`gemini-3.1-flash-lite` by default) for a short explanation. The exact location and API key are not sent in the prompt. Gemini explanations are labelled AI-generated and may be wrong; the deterministic model and optimizer evidence remains available if no key is configured or the provider fails.
+* Set `GEMINI_API_KEY` in the ignored local `.env` file. `GEMINI_MODEL` can override the default. Never commit `.env` or share the key in chat.
+
 ---
 
 ## Detailed Resources Required

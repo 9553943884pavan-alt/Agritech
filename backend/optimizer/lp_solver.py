@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 import numpy as np
 from scipy.optimize import linprog
 
@@ -40,6 +40,7 @@ class CropOptimizationResult:
     total_estimated_revenue: float
     total_estimated_profit: float
     allocations: List[Dict[str, Any]]
+    reasoning: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -96,6 +97,9 @@ def optimize_crop_allocation(
     costs_per_acre = []
     revenues_per_acre = []
     yields_tonnes_per_acre = []
+    yields_tonnes_per_hectare = []
+    yields_quintals_per_acre = []
+    prices_per_quintal = []
     
     for crop in valid_crops:
         econ = all_economics.get(crop, {})
@@ -122,6 +126,9 @@ def optimize_crop_allocation(
         costs_per_acre.append(cost)
         revenues_per_acre.append(rev)
         yields_tonnes_per_acre.append(yield_tonnes_acre)
+        yields_tonnes_per_hectare.append(yield_tonnes_ha)
+        yields_quintals_per_acre.append(yield_quintals_acre)
+        prices_per_quintal.append(price)
         
     costs_per_acre = np.array(costs_per_acre)
     revenues_per_acre = np.array(revenues_per_acre)
@@ -152,6 +159,66 @@ def optimize_crop_allocation(
     res = linprog(c, A_ub=A_ub, b_ub=b_ub, bounds=bounds, method="highs")
 
     allocations_list = []
+    max_crop_acres = single_crop_cap
+
+    def build_reasoning(allocated_acres: np.ndarray, method: str) -> Dict[str, Any]:
+        allocated_acres = np.asarray(allocated_acres, dtype=float)
+        used_land = float(np.sum(allocated_acres))
+        used_budget = float(np.sum(allocated_acres * costs_per_acre))
+        crop_rows = []
+        for i, crop in enumerate(valid_crops):
+            acres = float(allocated_acres[i])
+            crop_cost = float(costs_per_acre[i])
+            crop_revenue = float(revenues_per_acre[i])
+            crop_profit = crop_revenue - crop_cost
+            if not res.success:
+                decision_note = "fallback_assignment"
+            elif acres <= 0.001 and crop_profit <= 0:
+                decision_note = "nonpositive_margin"
+            elif acres <= 0.001:
+                decision_note = "not_selected_in_mix"
+            elif acres >= max_crop_acres - 0.01 and n > 1:
+                decision_note = "crop_limit"
+            else:
+                decision_note = "positive_profit_mix"
+            crop_rows.append({
+                "crop": crop.title(),
+                "yield_tonnes_per_hectare": float(yields_tonnes_per_hectare[i]),
+                "yield_tonnes_per_acre": float(yields_tonnes_per_acre[i]),
+                "yield_quintals_per_acre": float(yields_quintals_per_acre[i]),
+                "price_per_quintal": float(prices_per_quintal[i]),
+                "cost_per_acre": crop_cost,
+                "revenue_per_acre": crop_revenue,
+                "profit_per_acre": crop_profit,
+                "allocated_acres": acres,
+                "cost_invested": acres * crop_cost,
+                "expected_revenue": acres * crop_revenue,
+                "profit_contribution": acres * crop_profit,
+                "max_crop_acres": max_crop_acres,
+                "crop_cap_reached": acres >= max_crop_acres - 0.01,
+                "decision_note": decision_note,
+            })
+
+        return {
+            "method": method,
+            "objective": "maximize_net_profit" if res.success else "fallback_not_optimal",
+            "scope_note": "eligible_recommendations_only",
+            "constraints": {
+                "land_acres_available": float(land_acres),
+                "land_acres_used": used_land,
+                "land_acres_remaining": max(0.0, float(land_acres) - used_land),
+                "land_limit_reached": used_land >= land_acres - 0.01,
+                "budget_available": float(budget),
+                "budget_used": used_budget,
+                "budget_remaining": max(0.0, float(budget) - used_budget),
+                "budget_limit_reached": used_budget >= budget - 0.01,
+                "max_acres_per_crop": float(max_crop_acres),
+                "crop_share_limit": (
+                    float(max_single_crop_ratio) if n > 1 else 1.0
+                ),
+            },
+            "crops": crop_rows,
+        }
     
     if res.success:
         alloc_acres = np.round(res.x, 2)
@@ -186,6 +253,7 @@ def optimize_crop_allocation(
                 
         # Sort by allocated acres descending
         allocations_list.sort(key=lambda x: x["allocated_acres"], reverse=True)
+        reasoning = build_reasoning(alloc_acres, "linear_program_highs")
 
         return CropOptimizationResult(
             status="success",
@@ -197,7 +265,8 @@ def optimize_crop_allocation(
             remaining_budget=round(max(0.0, budget - total_cost), 2),
             total_estimated_revenue=round(total_revenue, 2),
             total_estimated_profit=round(total_profit, 2),
-            allocations=allocations_list
+            allocations=allocations_list,
+            reasoning=reasoning,
         )
     else:
         # Fallback to safe proportional split if budget is extremely tight
@@ -221,6 +290,10 @@ def optimize_crop_allocation(
                 "expected_revenue": c_rev,
                 "profit_est": c_profit
             })
+        reasoning = build_reasoning(
+            np.array([allocation["allocated_acres"] for allocation in fallback_allocs]),
+            "proportional_fallback",
+        )
             
         return CropOptimizationResult(
             status="fallback",
@@ -232,7 +305,8 @@ def optimize_crop_allocation(
             remaining_budget=round(max(0.0, budget - sum(a["cost_invested"] for a in fallback_allocs)), 2),
             total_estimated_revenue=round(sum(a["expected_revenue"] for a in fallback_allocs), 2),
             total_estimated_profit=round(sum(a["profit_est"] for a in fallback_allocs), 2),
-            allocations=fallback_allocs
+            allocations=fallback_allocs,
+            reasoning=reasoning,
         )
 
 if __name__ == "__main__":
