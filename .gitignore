@@ -36,3 +36,6 @@ data/ceda_cache_progress.json
 # Logs
 logs/
 *.log
+
+# Scratch scripts & temp test files
+scratch/

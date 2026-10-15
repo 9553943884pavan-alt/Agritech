@@ -25,6 +25,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [isListening, setIsListening] = useState(false);
+  const [showManualSoil, setShowManualSoil] = useState(false);
   const [soilTestRequired, setSoilTestRequired] = useState(false);
   const [soilTest, setSoilTest] = useState({
     nitrogen: '',
@@ -50,7 +51,6 @@ function App() {
     setLocation(value);
     prefetchControllerRef.current?.abort();
     setSoilTestRequired(false);
-    setSoilTest({ nitrogen: '', phosphorus: '', potassium: '', ph: '' });
     setSoilSummary(null);
     setSoilSourceError('');
     setMandiFailures(null);
@@ -165,6 +165,17 @@ function App() {
     setError('');
     setMandiFailures(null);
 
+    const hasValidSoilTest = Boolean(
+      soilTest.nitrogen !== ''
+      && soilTest.phosphorus !== ''
+      && soilTest.potassium !== ''
+      && soilTest.ph !== ''
+      && Number.isFinite(parseFloat(soilTest.nitrogen))
+      && Number.isFinite(parseFloat(soilTest.phosphorus))
+      && Number.isFinite(parseFloat(soilTest.potassium))
+      && Number.isFinite(parseFloat(soilTest.ph))
+    );
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/optimize`, {
         method: 'POST',
@@ -176,7 +187,7 @@ function App() {
           location: location.trim(),
           budget: parseFloat(budget),
           land_acres: parseFloat(land),
-          ...(soilTestRequired && {
+          ...(((soilTestRequired || showManualSoil) && hasValidSoilTest) && {
             soil_test: {
               nitrogen: parseFloat(soilTest.nitrogen),
               phosphorus: parseFloat(soilTest.phosphorus),
@@ -292,12 +303,51 @@ function App() {
               />
             </div>
 
-            {soilTestRequired && (
+            <div className="soil-test-toggle-container">
+              <button
+                type="button"
+                className="soil-toggle-button"
+                onClick={() => setShowManualSoil((prev) => !prev)}
+                aria-expanded={showManualSoil || soilTestRequired}
+              >
+                <span className="toggle-left">
+                  <span>🧪</span>
+                  <span>
+                    {showManualSoil || soilTestRequired
+                      ? 'Hide Manual Soil Readings'
+                      : 'Have Soil Health Card / Lab Test? Enter Manual Readings (Optional)'}
+                  </span>
+                </span>
+                <span>{showManualSoil || soilTestRequired ? '▲' : '▼'}</span>
+              </button>
+              {showManualSoil && !soilTestRequired && (
+                <p className="soil-toggle-hint">
+                  Custom lab readings override default regional estimates. Leave empty or close to use automated estimates.
+                </p>
+              )}
+            </div>
+
+            {(showManualSoil || soilTestRequired) && (
               <section className="soil-test-panel" aria-label="Soil test readings">
-                <h3>Enter exact soil-test readings</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <h3 style={{ margin: 0 }}>
+                    {soilTestRequired ? 'Enter exact soil-test readings' : 'Manual Soil Test Readings (Lab / SHC)'}
+                  </h3>
+                  {!soilTestRequired && (
+                    <button
+                      type="button"
+                      className="reset-soil-btn"
+                      onClick={() => setSoilTest({ nitrogen: '', phosphorus: '', potassium: '', ph: '' })}
+                      title="Clear soil values"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
                 <p>
-                  The currently connected backend requires measured values from the farmer&apos;s
-                  soil test. Use this only when that backend explicitly requests these readings.
+                  {soilTestRequired
+                    ? "The currently connected backend requires measured values from the farmer's soil test."
+                    : 'Provide your laboratory soil-test values (Nitrogen, Phosphorus, Potassium in kg/ha and pH) to override automated geospatial estimates.'}
                 </p>
                 {soilSummary && (
                   <details className="soil-summary">
@@ -314,22 +364,23 @@ function App() {
                 )}
                 <div className="soil-test-grid">
                   {[
-                    ['nitrogen', 'Nitrogen (N)'],
-                    ['phosphorus', 'Phosphorus (P)'],
-                    ['potassium', 'Potassium (K)'],
-                    ['ph', 'pH']
-                  ].map(([field, label]) => (
+                    ['nitrogen', 'Nitrogen (N) - kg/ha', 'e.g., 80', '300'],
+                    ['phosphorus', 'Phosphorus (P) - kg/ha', 'e.g., 40', '300'],
+                    ['potassium', 'Potassium (K) - kg/ha', 'e.g., 45', '500'],
+                    ['ph', 'Soil pH (1-14)', 'e.g., 6.5', '14']
+                  ].map(([field, label, placeholder, maxVal]) => (
                     <div className="input-group" key={field}>
                       <label htmlFor={`soil-${field}`}>{label}</label>
                       <input
                         id={`soil-${field}`}
                         type="number"
                         min={field === 'ph' ? '0.01' : '0'}
-                        max={field === 'potassium' ? '500' : field === 'ph' ? '14' : '300'}
+                        max={maxVal}
                         step="any"
+                        placeholder={placeholder}
                         value={soilTest[field]}
                         onChange={(event) => setSoilTest({ ...soilTest, [field]: event.target.value })}
-                        required
+                        required={soilTestRequired}
                       />
                     </div>
                   ))}
