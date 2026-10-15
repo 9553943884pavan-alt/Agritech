@@ -3,7 +3,8 @@ import { hasSimulatedPrice } from './priceSimulation.js';
 
 const ResultsDashboard = lazy(() => import('./ResultsDashboard.jsx'));
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://agritech-1euc.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL
+  || (import.meta.env.DEV ? 'http://127.0.0.1:8000' : 'https://agritech-1euc.onrender.com');
 
 function errorMessageFromResponse(detail) {
   if (typeof detail === 'string') return detail;

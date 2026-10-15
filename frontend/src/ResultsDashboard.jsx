@@ -49,6 +49,15 @@ const formatRupees = (value) => `Rs. ${formatNumber(value, 0)}`;
 
 const cropKey = (crop) => String(crop || '').trim().toLowerCase().replace(/[\s_-]+/g, '');
 const cropIcon = (crop) => cropIcons[cropKey(crop)] || '🌱';
+const normalizeDisplayText = (value) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const displayLocation = (value) => {
+  const parts = normalizeDisplayText(value)
+    .split(',')
+    .map((part) => part.trim().replace(/\s+District$/i, ''));
+  return parts.filter((part, index) => (
+    part && !parts.slice(0, index).some((previous) => previous.toLowerCase() === part.toLowerCase())
+  )).join(', ');
+};
 const cropName = (crop, index) => {
   const raw = String(crop || `${copy.crop} ${index + 1}`).trim();
   return copy.cropNames[cropKey(raw)] || raw.replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -451,6 +460,7 @@ function StackedShares({ items }) {
 function DataUsedCard({ result }) {
   const regional = result.regional_data || {};
   const provenance = result.soil_data_provenance || {};
+  const location = displayLocation(result.resolved_location);
   const sourceName = (feature) => {
     const status = provenance[feature]?.status;
     if (status === 'mock') return copy.mock;
@@ -463,7 +473,7 @@ function DataUsedCard({ result }) {
     <section className="data-used-card">
       <h3>{copy.dataUsed}</h3>
       <div className="data-badges">
-        {result.resolved_location && <span>{copy.location}: {result.resolved_location}</span>}
+        {location && <span>{copy.location}: {location}</span>}
         {regional.temperature != null && <span>{copy.temperature}: {formatNumber(regional.temperature)}°C</span>}
         {regional.rainfall != null && <span>{copy.rainfall}: {formatNumber(regional.rainfall)} mm</span>}
         {[
@@ -770,10 +780,12 @@ export default function ResultsDashboard({
     ...item,
     quintals: item.yieldTonnes * 10,
   }));
+  const displayMessage = normalizeDisplayText(result.message)
+    .replace(normalizeDisplayText(result.resolved_location), displayLocation(result.resolved_location));
 
   return (
     <div className="results-dashboard fade-in">
-      <div className="success-banner">{result.message}</div>
+      <div className="success-banner">{displayMessage}</div>
       <PriceSimulationBanner
         planIsSimulated={result.plan_is_simulated}
         soilDataIsSimulated={result.soil_data_is_simulated}

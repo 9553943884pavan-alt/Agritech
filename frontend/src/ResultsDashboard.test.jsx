@@ -73,6 +73,15 @@ describe('ResultsDashboard', () => {
     expect(screen.getByText(/Estimated profit: Rs\. 1,35,000/)).toBeTruthy();
   });
 
+  it('displays geocoded location names without pronunciation diacritics', () => {
+    renderDashboard(1, {
+      resolved_location: 'Nizāmābād, Nizamabad District, Telangana',
+      message: 'Plan generated for Nizāmābād, Nizamabad District, Telangana.',
+    });
+    expect(screen.getByText('Plan generated for Nizamabad, Telangana.')).toBeTruthy();
+    expect(screen.getByText('Location: Nizamabad, Telangana')).toBeTruthy();
+  });
+
   it('shows hatched bars for mock and proxy prices, but not real prices', () => {
     const { result, priceDetails } = makeResult(3);
     priceDetails.rice = { source: 'mock', price_rs_per_quintal: 2000 };

@@ -28,6 +28,14 @@ describe('frontend optimizer integration', () => {
       soil_data_is_simulated: false,
       price_data_is_simulated: false,
       total_estimated_profit: 135000,
+      ai_reasoning: {
+        status: 'ready',
+        model: 'gemini-3.1-flash-lite',
+        classifier_summary: 'The classifier ranked crops using the supplied soil and weather features.',
+        classifier_reasons: [{ crop: 'rice', reason: 'Rainfall and nitrogen influenced the model score.' }],
+        optimizer_summary: 'The optimizer compared estimated profit under the land and budget limits.',
+        allocation_reasons: [{ crop: 'Rice', reason: 'Rice was assigned land in the selected plan.' }],
+      },
       utilized_budget: 87500,
       allocated_land_acres: 5,
       allocations: [
@@ -77,6 +85,9 @@ describe('frontend optimizer integration', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, options] = fetchMock.mock.calls[0];
     expect(url).toMatch(/\/api\/optimize$/);
+    if (!import.meta.env.VITE_API_URL) {
+      expect(url).toBe('http://127.0.0.1:8000/api/optimize');
+    }
     expect(options.method).toBe('POST');
     expect(JSON.parse(options.body)).toEqual({
       location: 'Nizamabad',
@@ -86,6 +97,8 @@ describe('frontend optimizer integration', () => {
     expect(screen.getByText('Your entered land:').parentElement.textContent).toContain('5.3 acres');
     expect(screen.getByText('Your entered budget:').parentElement.textContent).toContain('Rs. 1,25,001');
     expect(screen.getByText('Rs. 90,000')).toBeTruthy();
+    expect(screen.getByText('AI-generated explanation (Gemini)')).toBeTruthy();
+    expect(screen.getByText('Rainfall and nitrogen influenced the model score.')).toBeTruthy();
   });
 
   it('surfaces FastAPI validation detail and keeps the form available', async () => {
