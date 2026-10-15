@@ -317,6 +317,22 @@ class OptimizeFarmTests(unittest.TestCase):
         self.assertEqual(crop["revenue_per_acre"], 1200)
         self.assertEqual(crop["profit_per_acre"], 200)
 
+    def test_optimizer_deduplicates_candidate_crops(self):
+        result = main.optimize_crop_allocation(
+            land_acres=5,
+            budget=100000,
+            candidate_crops=["rice", "Rice", "RICE", "maize"],
+        )
+        self.assertEqual(result.status, "success")
+        crops_in_allocations = [a["crop"].lower() for a in result.allocations]
+        self.assertEqual(len(crops_in_allocations), len(set(crops_in_allocations)))
+
+    def test_optimizer_rejects_nonpositive_inputs(self):
+        res_zero_land = main.optimize_crop_allocation(0, 50000, ["rice"])
+        self.assertEqual(res_zero_land.status, "error")
+        res_neg_budget = main.optimize_crop_allocation(5, -100, ["rice"])
+        self.assertEqual(res_neg_budget.status, "error")
+
     def test_yield_estimator_prefers_district_and_falls_back_by_scope(self):
         lookup = {
             "rice": {

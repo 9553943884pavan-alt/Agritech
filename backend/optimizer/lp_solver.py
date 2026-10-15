@@ -88,7 +88,7 @@ def optimize_crop_allocation(
     
     # Clean and filter candidate crops
     clean_candidates = [c.lower().strip() for c in candidate_crops]
-    valid_crops = [c for c in clean_candidates if c in all_economics]
+    valid_crops = list(dict.fromkeys(c for c in clean_candidates if c in all_economics))
     
     # Fallback to defaults if candidate crops are empty or unrecognized
     if not valid_crops:
