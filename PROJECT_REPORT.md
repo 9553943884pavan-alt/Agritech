@@ -35,7 +35,7 @@ Agriculture sustains over **58% of India's rural households**, yet the average I
 - Climatological data is trapped in raw APIs or generic daily weather forecasts.
 - Mandi commodity prices exist across **Agmarknet** / **CEDA** and state-level agricultural market boards.
 
-Most existing agricultural software solutions simply offer isolated advisory outputs (e.g., classifying a single crop recommendation) or demand complex chemical parameters ($N$, $P$, $K$ in kg/ha, electrical conductivity, pH) that uneducated farmers cannot provide.
+Most existing agricultural software solutions simply offer isolated advisory outputs (e.g., classifying a single crop recommendation) or demand complex chemical parameters (N, P, K in kg/ha, electrical conductivity, pH) that uneducated farmers cannot provide.
 
 The **AI-Based Crop and Agricultural Resource Optimization System** eliminates this divide by acting as a unified, full-stack, voice-enabled financial and agronomic advisor. It requires only **three intuitive farmer inputs**:
 1. **Village / District Location** (spoken or typed in local vernacular language)
@@ -78,7 +78,7 @@ mindmap
 
 ### 2.1 Core Problem Statement
 1. **Extreme Data Fragmentation:** Farmers cannot cross-reference weather forecasts, soil parameters, seed/fertilizer input costs, and mandi price volatility simultaneously.
-2. **Usability Barrier:** Rural Indian smallholders cannot interpret numeric chemical soil reports ($N$, $P$, $K$, $pH$) or scientific units ($t/ha$, $MJ/m^2$).
+2. **Usability Barrier:** Rural Indian smallholders cannot interpret numeric chemical soil reports (N, P, K, pH) or scientific units (t/ha, MJ/m²).
 3. **Absence of Optimization:** Existing recommender systems only answer *"What can grow here?"* (Classification) rather than *"How should I divide my 5 acres and Rs. 1,00,000 across viable crops to maximize income without going bankrupt?"* (Constrained Resource Allocation).
 
 ### 2.2 Project Goals and Quantitative Targets
@@ -87,11 +87,11 @@ mindmap
 | :--- | :--- | :--- |
 | **Accessibility** | 100% voice-operable in Indian English and vernacular dialects | HTML5 Web Speech API integration with real-time transcript streaming. |
 | **Simplicity** | Zero mandatory chemical inputs from the farmer | Automatic geospatial geocoding + SoilGrids/SHC resolution; optional manual test override. |
-| **Agronomic Accuracy** | Top-3 ranked crop recommendations with $>99\%$ F1-score | Random Forest Classifier trained on 2,200 multi-feature soil-climate observations. |
-| **Economic Soundness** | Strict budget adherence ($\sum C_i x_i \le \text{Budget}$) with positive net margin | SciPy HiGHS Simplex/Interior-Point Linear Programming engine. |
-| **Risk Mitigation** | Prevent devastating single-crop monoculture collapse | Enforced bound: $x_i \le 0.65 \times \text{Total Land}$ for multiple candidate crops. |
+| **Agronomic Accuracy** | Top-3 ranked crop recommendations with >99% F1-score | Random Forest Classifier trained on 2,200 multi-feature soil-climate observations. |
+| **Economic Soundness** | Strict budget adherence (∑ (C_i × x_i) ≤ Budget) with positive net margin | SciPy HiGHS Simplex/Interior-Point Linear Programming engine. |
+| **Risk Mitigation** | Prevent devastating single-crop monoculture collapse | Enforced bound: x_i ≤ 0.65 × Total Land for multiple candidate crops. |
 | **Explainable AI (XAI)** | Fully transparent decision auditing for farmers and agronomists | Local TreeSHAP attribution + LP constraint slack logging + Gemini plain-language explanations. |
-| **System Latency** | Sub-second cached response, $<2.5\text{s}$ full pipeline execution | Asynchronous I/O threading, in-memory TTL caching, and speculative location prefetching. |
+| **System Latency** | Sub-second cached response, <2.5s full pipeline execution | Asynchronous I/O threading, in-memory TTL caching, and speculative location prefetching. |
 
 ---
 
@@ -131,16 +131,18 @@ The codebase is engineered modularly across five cohesive sub-systems:
 
 ### 3.3 Module 3: Multi-Tier Soil Nutrient Resolution (`backend/data_sources.py`)
 - **Dynamic Hierarchy:**
-  1. *User Override:* Farmer enters exact laboratory soil-test readings ($N, P, K, pH$) if available.
-  2. *SoilGrids REST API:* Retrieves mapped physical and chemical properties (e.g., standard pH at depth $0\text{--}5\text{ cm}$).
+  1. *User Override:* Farmer enters exact laboratory soil-test readings (N, P, K, pH) if available.
+  2. *SoilGrids REST API:* Retrieves mapped physical and chemical properties (e.g., standard pH at depth 0–5 cm).
   3. *Soil Health Card Portal:* Pulls district-level macro-nutrient distribution summaries for contextual display.
   4. *Location-Keyed Mock Fallback:* Provides tagged, reproducible synthetic estimates when public databases have unit mismatches, flagging the plan as `simulated`.
 
 ### 3.4 Module 4: Machine Learning Crop Suitability & SHAP Engine (`ml/`)
 - **Model:** 100-estimator `RandomForestClassifier` trained on 22 standardized crop categories.
-- **Input Feature Vector:** $[N, P, K, \text{Temperature}, \text{Humidity}, pH, \text{Rainfall}]$.
+- **Input Feature Vector:** `[N, P, K, Temperature, Humidity, pH, Rainfall]`.
 - **XAI TreeSHAP (`shap.TreeExplainer`):** Calculates exact additive attribution scores for each environmental feature:
-  $$\text{Score}(\text{Crop}_k) = \text{Baseline}_k + \sum_{j=1}^{7} \phi_{j, k}$$
+  ```text
+Score(Crop_k) = Baseline_k + ∑(j=1 to 7) [TreeSHAP Attribution φ_j,k]
+```
 - **District×Season Yield Lookup Engine (`crop_yield_lookup_v3.json`):** Replaces flawed regressions with empirical historical median yields across district, state, and seasonal strata.
 
 ### 3.5 Module 5: Operations Research SciPy LP Allocation Optimizer (`backend/optimizer/lp_solver.py`)
@@ -262,49 +264,54 @@ sequenceDiagram
 The agricultural resource allocation problem is modeled as a continuous single-period constrained optimization problem solved via the **HiGHS** Simplex algorithm:
 
 #### Decision Variables
-Let $n$ be the number of eligible candidate crops recommended by the classifier (where $n \le 3$).  
-Let $x_i \ge 0$ denote the land allocated to crop $i$ in **Acres**, for $i \in \{1, 2, \dots, n\}$.
+- Let **n** be the number of eligible candidate crops recommended by the classifier (where n ≤ 3).
+- Let **x_i ≥ 0** denote the land allocated to crop *i* in **Acres**, for i ∈ {1, 2, ..., n}.
 
 #### Parameter Definitions
-- $L$: Total available arable land (**Acres**).
-- $B$: Total available working budget (**Rs.**).
-- $Y_i$: Estimated expected yield for crop $i$ (**Tonnes per Hectare**).
-- $P_i$: Expected wholesale market price for crop $i$ (**Rs. per Quintal**).
-- $C_i$: Estimated cultivation cost for crop $i$ (**Rs. per Acre**).
-- $\alpha$: Maximum single-crop land allocation ratio ($\alpha = 0.65$ for $n > 1$; $\alpha = 1.0$ for $n = 1$).
+- **L**: Total available arable land (**Acres**).
+- **B**: Total available working budget (**Rs.**).
+- **Y_i**: Estimated expected yield for crop *i* (**Tonnes per Hectare**).
+- **P_i**: Expected wholesale market price for crop *i* (**Rs. per Quintal**).
+- **C_i**: Estimated cultivation cost for crop *i* (**Rs. per Acre**).
+- **α (alpha)**: Maximum single-crop land allocation ratio (α = 0.65 for n > 1; α = 1.0 for n = 1).
 
 #### Agronomic Unit Conversions
-Government databases report yields in metric tonnes per hectare ($t/ha$). Indian markets trade commodities in quintals ($1\text{ Quintal} = 100\text{ kg} = 0.1\text{ Tonnes}$), and land is measured in acres ($1\text{ Hectare} \approx 2.471\text{ Acres}$).
+Government databases report yields in metric tonnes per hectare (t/ha). Indian markets trade commodities in quintals (1 Quintal = 100 kg = 0.1 Tonnes), and land is measured in acres (1 Hectare ≈ 2.471 Acres):
 
-$$\text{Yield in Quintals per Acre } (q_i) = \left( \frac{Y_i}{2.47105} \right) \times 10 = \frac{10 \, Y_i}{2.47105}$$
-
-$$\text{Revenue per Acre } (R_i) = q_i \times P_i = \left( \frac{10 \, Y_i}{2.47105} \right) P_i$$
-
-$$\text{Net Profit Margin per Acre } (M_i) = R_i - C_i$$
+```text
+Yield in Quintals per Acre (q_i) = (Y_i / 2.47105) × 10 = (10 × Y_i) / 2.47105
+Revenue per Acre (R_i)          = q_i × P_i = [(10 × Y_i) / 2.47105] × P_i
+Net Profit Margin per Acre (M_i)= R_i - C_i
+```
 
 #### Linear Program Formulation
-SciPy's `linprog` minimizes an objective vector $c^T x$. We formulate profit maximization by minimizing the negative profit:
+SciPy's `linprog` minimizes an objective vector `c^T · x`. We formulate profit maximization by minimizing negative profit:
 
-$$\min_{x} \quad f(x) = \sum_{i=1}^{n} -M_i \cdot x_i$$
+```text
+Objective Function:
+    Minimize: f(x) = ∑ (-M_i × x_i)  for i = 1 to n   (Maximizes Total Net Profit)
 
-$$\text{Subject to:}$$
+Subject to:
+    1. Total Land Constraint:        ∑ (x_i) ≤ L
+    2. Total Working Budget:         ∑ (C_i × x_i) ≤ B
+    3. Anti-Monoculture Bound:       0 ≤ x_i ≤ α × L   (α = 0.65 risk cap for n > 1)
+    4. Non-Negativity Bound:         x_i ≥ 0,  for all i ∈ {1, ..., n}
+```
 
-1. **Total Land Constraint:**
-   $$\sum_{i=1}^{n} x_i \le L$$
+#### Canonical Matrix Representation
+```text
+Standard Matrix Form:
+    Minimize:   c^T · x
+    Subject to: A_ub · x ≤ b_ub
+                0 ≤ x ≤ u
 
-2. **Total Working Budget Constraint:**
-   $$\sum_{i=1}^{n} C_i \cdot x_i \le B$$
-
-3. **Risk & Anti-Monoculture Diversification Bound:**
-   $$0 \le x_i \le \alpha \cdot L, \quad \forall i \in \{1, \dots, n\}$$
-
-4. **Non-Negativity Constraint:**
-   $$x_i \ge 0, \quad \forall i \in \{1, \dots, n\}$$
-
-#### Matrix Representation
-$$\min_{x} \quad c^T x \quad \text{s.t.} \quad A_{ub} x \le b_{ub}, \quad 0 \le x \le u$$
-
-$$c = \begin{bmatrix} -M_1 \\ -M_2 \\ \vdots \\ -M_n \end{bmatrix}, \quad A_{ub} = \begin{bmatrix} 1 & 1 & \dots & 1 \\ C_1 & C_2 & \dots & C_n \end{bmatrix}, \quad b_{ub} = \begin{bmatrix} L \\ B \end{bmatrix}, \quad u_i = \alpha \cdot L$$
+where:
+    c    = [ -M_1,  -M_2,  ...,  -M_n ]^T
+    A_ub = [   1,     1,   ...,    1   ]   (Land row)
+           [  C_1,   C_2,  ...,   C_n  ]   (Budget row)
+    b_ub = [ L, B ]^T
+    u_i  = α × L                           (Upper bound vector)
+```
 
 ---
 
@@ -333,7 +340,7 @@ $$c = \begin{bmatrix} -M_1 \\ -M_2 \\ \vdots \\ -M_n \end{bmatrix}, \quad A_{ub}
 ### 5.2 Repository File Structure & Architectural Mapping
 
 ```
-c:\Users\Pavan\Downloads\VJ
+AG_07_The_King
 ├── backend/
 │   ├── main.py                     # FastAPI server, pipeline orchestrator, Gemini integration
 │   ├── data_sources.py             # Geospatial, soil, Mandi price & CEDA cache resolvers
@@ -379,8 +386,8 @@ c:\Users\Pavan\Downloads\VJ
 
 The historical production records (246,091 rows from the Ministry of Agriculture) underwent rigorous cleaning in [`ml/experiments/regressor/clean_data.py`](file:///c:/Users/Pavan/Downloads/VJ/ml/experiments/regressor/clean_data.py):
 1. **Name Normalization:** 124 disparate variety names (e.g., *"Paddy"*, *"Rice(Dhan)"*, *"Gram"*, *"Bengal Gram"*) were mapped to 22 target categories using [`crop_name_mapping.json`](file:///c:/Users/Pavan/Downloads/VJ/universal_data/crop_name_mapping.json).
-2. **Yield Calculation:** Computed $\text{Yield} = \frac{\text{Production (Tonnes)}}{\text{Area (Hectares)}}$.
-3. **Outlier Pruning:** Extreme outliers exceeding biological physiological limits (e.g., $>100\text{ t/ha}$ for cereals) and non-crop rows were purged.
+2. **Yield Calculation:** Computed `Yield = Production (Tonnes) / Area (Hectares)`.
+3. **Outlier Pruning:** Extreme outliers exceeding biological physiological limits (e.g., >100 t/ha for cereals) and non-crop rows were purged.
 4. **Final Processed Dataset:** 67,396 clean, stratified agricultural records spanning from 1997 to 2020.
 
 ---
@@ -388,10 +395,12 @@ The historical production records (246,091 rows from the Ministry of Agriculture
 ### 5.4 The Yield Prediction Paradigm Shift: Why XGBoost Was Retired for Lookup v3
 
 In early development (`EXP_REG_01`), an **XGBoost Regressor** was trained to predict crop yield. Deep statistical auditing revealed a fatal machine learning flaw:
-- **Circular Leakage:** In the raw dataset, $\text{Yield} \equiv \frac{\text{Production}}{\text{Area}}$. Using $\text{Area}$ or $\text{Production}$ as features resulted in circular identity leakage ($R^2 \approx 0.99$), but the model collapsed ($R^2 < 0.05$) when evaluated on purely causal pre-season features (State, Season, Soil).
-- **Zero Causal Correlation:** Macro-features had correlation coefficients $|r| < 0.1$ with yield.
+- **Circular Leakage:** In the raw dataset, `Yield ≡ Production / Area`. Using `Area` or `Production` as features resulted in circular identity leakage (R² ≈ 0.99), but the model collapsed (R² < 0.05) when evaluated on purely causal pre-season features (State, Season, Soil).
+- **Zero Causal Correlation:** Macro-features had correlation coefficients |r| < 0.1 with yield.
 - **The Solution (`EXP_REG_03`):** Built [`crop_yield_lookup_v3.json`](file:///c:/Users/Pavan/Downloads/VJ/ml/experiments/regressor/models/crop_yield_lookup_v3.json), an empirical hierarchical median lookup table with strict time-ordered validation. The lookup resolves in strict hierarchy:
-  $$\text{District} \times \text{Season} \longrightarrow \text{State} \times \text{Season} \longrightarrow \text{National Crop Median}$$
+  ```text
+District × Season  →  State × Season  →  National Crop Median
+```
   This eliminated artificial regression hallucinations and guaranteed leak-free yield estimations grounded in historical reality.
 
 ---
@@ -424,7 +433,7 @@ The Random Forest crop suitability classifier was evaluated on 2,200 stratified 
 - **Holdout Accuracy (80/20 Split):** **99.32%** (437 / 440 correctly classified)
 - **Macro Precision:** 0.9935 | **Macro Recall:** 0.9932 | **Macro F1-Score:** **0.9932**
 - **Weighted Precision:** 0.9935 | **Weighted Recall:** 0.9932 | **Weighted F1-Score:** **0.9932**
-- **5-Fold Stratified Cross-Validation Accuracy:** **99.26% $\pm$ 0.61%**
+- **5-Fold Stratified Cross-Validation Accuracy:** **99.26% ± 0.61%**
 
 #### Feature Importance Distribution (Gini Impurity Reduction)
 | Feature Name | Agronomic Feature Description | Importance Share |
@@ -442,7 +451,7 @@ The Random Forest crop suitability classifier was evaluated on 2,200 stratified 
 ### 6.3 Crop Yield Regressor Experiments & Quantitative Results (EXP_REG_01)
 
 #### 6.3.1 Experimental Design & Objective
-In experiment `EXP_REG_01` ([`ml/experiments/regressor/train_xgb_regressor.py`](file:///c:/Users/Pavan/Downloads/VJ/ml/experiments/regressor/train_xgb_regressor.py)), an **XGBoost Regressor** (`XGBRegressor`, `tree_method='hist'`) was trained on 66,141 cleaned government production records spanning 22 target crops to evaluate whether gradient-boosted decision trees could reliably predict crop yield ($t/ha$) from macro agro-climatic labels:
+In experiment `EXP_REG_01` ([`ml/experiments/regressor/train_xgb_regressor.py`](file:///c:/Users/Pavan/Downloads/VJ/ml/experiments/regressor/train_xgb_regressor.py)), an **XGBoost Regressor** (`XGBRegressor`, `tree_method='hist'`) was trained on 66,141 cleaned government production records spanning 22 target crops to evaluate whether gradient-boosted decision trees could reliably predict crop yield (t/ha) from macro agro-climatic labels:
 
 ```mermaid
 graph TD
@@ -475,26 +484,26 @@ graph TD
 #### 6.3.3 Global Quantitative Evaluation
 | Evaluation Metric | 80/20 Holdout Score (n=13,228) | 5-Fold Cross-Validation | Diagnostic Implication |
 | :--- | :--- | :--- | :--- |
-| **$R^2$ Score** | **0.7274** | $0.7047 \pm 0.0431$ | Appears strong globally due to variance outliers |
-| **Root Mean Squared Error (RMSE)** | **307.48 t/ha** | $322.56 \pm 21.38$ t/ha | Unacceptably large error dispersion |
-| **Mean Absolute Error (MAE)** | **29.33 t/ha** | $32.64 \pm 2.11$ t/ha | Exceeds average crop yield by 10x–30x |
-| **Mean Absolute % Error (MAPE)** | **1,241.35%** | $1,310.42\%$ | Severe skew from low-yield pulse rows |
+| **R² Score** | **0.7274** | 0.7047 ± 0.0431 | Appears strong globally due to variance outliers |
+| **Root Mean Squared Error (RMSE)** | **307.48 t/ha** | 322.56 ± 21.38 t/ha | Unacceptably large error dispersion |
+| **Mean Absolute Error (MAE)** | **29.33 t/ha** | 32.64 ± 2.11 t/ha | Exceeds average crop yield by 10x–30x |
+| **Mean Absolute % Error (MAPE)** | **1,241.35%** | 1,310.42% | Severe skew from low-yield pulse rows |
 
 #### 6.3.4 XGBoost Feature Importance Breakdown (Gain)
 | Feature Name | Gain Importance | Description & Agronomic Role |
 | :--- | :--- | :--- |
 | `crop_mean_yield` | **0.5779** | Crop-identity target-encoding proxy (dominates decision splits) |
 | `state_enc` | **0.2311** | Ordinal state label encoding |
-| `log_area` | **0.1030** | Log-transformed cultivation area ($\log(1 + \text{Area})$) |
+| `log_area` | **0.1030** | Log-transformed cultivation area (log(1 + Area)) |
 | `crop_enc` | **0.0706** | Ordinal crop label encoding |
 | `season_enc` | **0.0174** | Ordinal planting season label encoding |
 
 *Visual Artifacts:* [`EXP_REG_01_feature_importance.png`](file:///c:/Users/Pavan/Downloads/VJ/ml/reports/regressor/EXP_REG_01_feature_importance.png) | [`EXP_REG_01_true_vs_predicted.png`](file:///c:/Users/Pavan/Downloads/VJ/ml/reports/regressor/EXP_REG_01_true_vs_predicted.png)
 
 #### 6.3.5 Per-Crop Holdout Diagnostic Breakdown (Revealing the Failure)
-While the global $R^2$ appeared deceptively high (0.7274), class-stratified analysis revealed that the model completely collapsed on individual food grains and pulses:
+While the global R² appeared deceptively high (0.7274), class-stratified analysis revealed that the model completely collapsed on individual food grains and pulses:
 
-| Crop Category | Sample Size ($n$) | Per-Crop $R^2$ | RMSE ($t/ha$) | Clinical Diagnostic Finding |
+| Crop Category | Sample Size (n) | Per-Crop R² | RMSE (t/ha) | Clinical Diagnostic Finding |
 | :--- | :--- | :--- | :--- | :--- |
 | **Rice** | 3,001 | **-27.34** | 5.234 t/ha | Residual variance is 28x larger than baseline target variance |
 | **Chickpea** | 1,476 | **-346.46** | 7.012 t/ha | Catastrophic failure; predictions wander across invalid scales |
@@ -506,16 +515,16 @@ While the global $R^2$ appeared deceptively high (0.7274), class-stratified anal
 | **Banana** | 587 | **-2.25** | 34.473 t/ha | High variance across state horticultural practices |
 | **Mango** | 71 | **-122.53** | 31.611 t/ha | Large orchard yield swings between on-year and off-year bearing |
 | **Orange** | 60 | **-67.10** | 37.225 t/ha | Extreme horticultural misattribution |
-| **Papaya** | 86 | **-1.05** | 53.267 t/ha | High standard deviation ($>35\text{ t/ha}$) produces wild residuals |
-| **Coconut** | 337 | **+0.609** | 1,925.088 t/ha | **Artifact:** Nut counts ($3500\text{--}11000\text{ nuts/ha}$) inflated global $R^2$ |
+| **Papaya** | 86 | **-1.05** | 53.267 t/ha | High standard deviation (>35 t/ha) produces wild residuals |
+| **Coconut** | 337 | **+0.609** | 1,925.088 t/ha | **Artifact:** Nut counts (3,500–11,000 nuts/ha) inflated global R² |
 | **Maize** | 2,791 | **+0.846** | 11.106 t/ha | Fit localized high-density industrial cultivation |
 | **Cotton** | 832 | **+0.295** | 9.528 t/ha | Modest commercial signal |
 | **Jute** | 293 | **+0.554** | 3.039 t/ha | Partially correlated with eastern delta states |
 
 #### 6.3.6 Root-Cause Analysis: Why Complex ML Regressors Fail on Field Yield
-1. **Mathematical Circular Leakage:** In raw records, $\text{Yield} \equiv \frac{\text{Production}}{\text{Area}}$. Using $\text{Area}$ as an input feature created circular identity leakage during training, but gave zero causal forward-looking explanatory power at inference time when production is unknown.
-2. **Absence of Farm-Level Causal Features:** Macro-variables (State, Season, Area) exhibit near-zero linear and non-linear correlation ($|r| < 0.1$) with field yield. Yield is governed by micro-factors (fertilizer timing, seed genetics, localized pest attacks, irrigation schedule) that do not exist in district-level administrative datasets.
-3. **Coconut Unit Contamination:** Coconut production in government datasets was recorded in raw nut count rather than metric tonnes. Nut yields of 3,500 to 11,000 units mathematically dominated the total sum of squares ($\sum (y - \bar{y})^2$), masking the collapse of all 21 other crops under an illusory 0.7274 global score.
+1. **Mathematical Circular Leakage:** In raw records, `Yield ≡ Production / Area`. Using `Area` as an input feature created circular identity leakage during training, but gave zero causal forward-looking explanatory power at inference time when production is unknown.
+2. **Absence of Farm-Level Causal Features:** Macro-variables (State, Season, Area) exhibit near-zero linear and non-linear correlation (|r| < 0.1) with field yield. Yield is governed by micro-factors (fertilizer timing, seed genetics, localized pest attacks, irrigation schedule) that do not exist in district-level administrative datasets.
+3. **Coconut Unit Contamination:** Coconut production in government datasets was recorded in raw nut count rather than metric tonnes. Nut yields of 3,500 to 11,000 units mathematically dominated the total sum of squares (∑(y - ȳ)²), masking the collapse of all 21 other crops under an illusory 0.7274 global score.
 4. **Variance Inflation:** Decision trees partition feature space into piecewise constant regions. When training data has high irreducible noise, gradient boosting fits spurious noise, generating predictions with higher variance than a simple empirical median.
 
 ---
@@ -524,7 +533,7 @@ While the global $R^2$ appeared deceptively high (0.7274), class-stratified anal
 
 #### 6.4.1 The Methodological Pivot to Hierarchical Conditional Medians
 To permanently eliminate regression hallucinations, enforce causal integrity, and satisfy the requirements of the SciPy HiGHS LP optimizer, the platform transitioned across two successive iterations:
-- **EXP_REG_02 (Lookup v2):** Converted coconut nut counts to metric tonnes of copra equivalent ($\text{copra} = \text{nuts} \times 0.00014$) and established a 3-tier State-level conditional median hierarchy.
+- **EXP_REG_02 (Lookup v2):** Converted coconut nut counts to metric tonnes of copra equivalent (copra = nuts × 0.00014) and established a 3-tier State-level conditional median hierarchy.
 - **EXP_REG_03 (District-Aware Lookup v3 - Active Production Model):** Introduced district-level granularity, recent 5-year rolling windows, training-fold outlier trimming, and strict out-of-time chronological validation.
 
 ```mermaid
@@ -548,10 +557,10 @@ The quantitative evolution across the three experimental iterations highlights t
 | :--- | :--- | :--- | :--- | :--- |
 | **Model Paradigm** | Gradient Boosted Decision Trees | Empirical Conditional Median | **Hierarchical Multi-Level Median** | Zero-leakage mathematical framework |
 | **Validation Strategy** | Random 80/20 Holdout | Random 80/20 Holdout | **Out-of-Time Expanding Window (2008–2014)** | Strict chronological validation |
-| **Validation Samples ($n$)** | 13,228 | 13,161 | **26,283 Historical Test Records** | Scored across full 7-year out-of-time test set |
+| **Validation Samples (n)** | 13,228 | 13,161 | **26,283 Historical Test Records** | Scored across full 7-year out-of-time test set |
 | **Mean Absolute Error (MAE)** | 29.33 t/ha | 0.9076 t/ha | **0.7469 t/ha** | **+97.46% Error Reduction** (+17.71% vs v2) |
 | **Root Mean Squared Error (RMSE)**| 307.48 t/ha | 3.6066 t/ha | **3.3571 t/ha** | **+98.91% Error Reduction** (+6.92% vs v2) |
-| **$R^2$ Score (Out-of-Time)** | -45.2 (Per-crop median) | 0.8108 | **0.8361** | Stable, positive predictive power across all crops |
+| **R² Score (Out-of-Time)** | -45.2 (Per-crop median) | 0.8108 | **0.8361** | Stable, positive predictive power across all crops |
 | **Weighted Absolute % Error (WAPE)**| 1,241.35% | 27.60% | **22.71%** | **Error reduced from 1241% down to 22.7%** |
 | **Inference Latency** | 18.5 ms | 0.5 ms | **0.3 ms** | **61x Faster Execution** |
 | **Memory / Storage Footprint** | 42.8 MB (`.joblib` + encoders) | 1.8 MB (`.json`) | **2.1 MB (`crop_yield_lookup_v3.json`)** | **95.1% Smaller Memory Footprint** |
@@ -560,7 +569,7 @@ The quantitative evolution across the three experimental iterations highlights t
 #### 6.4.3 Fallback Level Coverage Distribution in Active Production
 In production validation across 26,283 out-of-time test observations, the multi-tier hierarchy resolved the overwhelming majority of requests at the most granular district level:
 
-| Fallback Hierarchy Level | Matching Scope | Query Count ($n$) | Share of Traffic | Agronomic Precision |
+| Fallback Hierarchy Level | Matching Scope | Query Count (n) | Share of Traffic | Agronomic Precision |
 | :--- | :--- | :--- | :--- | :--- |
 | **Level 1 (L1)** | `District × Crop × Season` | **22,814** | **86.80%** | District-specific micro-climate historical baseline |
 | **Level 2 (L2)** | `State × Crop × Season` | **3,382** | **12.87%** | Regional state agro-ecological zone fallback |
@@ -571,25 +580,25 @@ In production validation across 26,283 out-of-time test observations, the multi-
 #### 6.4.4 Comprehensive Per-Crop Out-of-Time Validation (EXP_REG_03)
 The active production lookup was evaluated on **26,283 historical field records** spanning the expanding test window 2008–2014, where each test year was predicted exclusively from prior complete years:
 
-| Crop Name | Out-of-Time Test Rows ($n$) | Out-of-Time MAE ($t/ha$) | Typical Field Yield ($t/ha$) | Equivalent Acre Margin Error | Agricultural Clinical Accuracy |
+| Crop Name | Out-of-Time Test Rows (n) | Out-of-Time MAE (t/ha) | Typical Field Yield (t/ha) | Equivalent Acre Margin Error | Agricultural Clinical Accuracy |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Lentil** | 22 | **0.090 t/ha** | 0.6 – 1.1 t/ha | $\pm 0.36\text{ q/acre}$ | Exceptional accuracy for winter rabi pulse |
-| **Blackgram** | 41 | **0.095 t/ha** | 0.5 – 1.0 t/ha | $\pm 0.38\text{ q/acre}$ | Completely solved the -1898 $R^2$ failure of XGBoost |
-| **Mungbean** | 4,474 | **0.130 t/ha** | 0.3 – 0.8 t/ha | $\pm 0.53\text{ q/acre}$ | Stable across 4,400+ national observations |
-| **Mothbeans** | 180 | **0.199 t/ha** | 0.2 – 0.5 t/ha | $\pm 0.81\text{ q/acre}$ | Consistent arid pulse estimation |
-| **Pigeonpeas (Arhar)**| 2,916 | **0.202 t/ha** | 0.5 – 1.2 t/ha | $\pm 0.82\text{ q/acre}$ | Sub-quintal error for staple Kharif legume |
-| **Chickpea (Gram)** | 2,659 | **0.223 t/ha** | 0.6 – 1.4 t/ha | $\pm 0.90\text{ q/acre}$ | Successfully overturned XGBoost's -346 $R^2$ dispersion |
-| **Coconut (Copra)** | 735 | **0.360 t/ha** | 0.2 – 1.2 t/ha | $\pm 1.46\text{ q/acre}$ | Unit conversion to copra tonnes verified ($0.00014\text{ t/nut}$) |
-| **Rice (Paddy)** | 5,840 | **0.373 t/ha** | 1.5 – 3.8 t/ha | $\pm 1.51\text{ q/acre}$ | High-fidelity yield benchmark across all Indian states |
-| **Cotton** | 1,649 | **0.565 t/ha** | 0.8 – 2.2 t/ha | $\pm 2.29\text{ q/acre}$ | Captures commercial lint regional distributions |
-| **Maize (Corn)** | 5,681 | **0.604 t/ha** | 1.2 – 3.5 t/ha | $\pm 2.45\text{ q/acre}$ | Reflects intensive hybrid corn farming variations |
-| **Orange** | 78 | **0.686 t/ha** | 6.0 – 14.0 t/ha | $\pm 2.78\text{ q/acre}$ | $<8\%$ relative error for citrus orchard crops |
-| **Jute** | 545 | **1.908 t/ha** | 6.0 – 14.0 t/ha | $\pm 7.72\text{ q/acre}$ | Accurate fiber biomass yield tracking |
-| **Mango** | 84 | **2.680 t/ha** | 3.0 – 9.0 t/ha | $\pm 10.85\text{ q/acre}$| Robust median buffers against alternate-year bearing swings |
-| **Pomegranate** | 15 | **2.701 t/ha** | 8.0 – 16.0 t/ha | $\pm 10.93\text{ q/acre}$| Solid horticultural benchmark |
-| **Grapes** | 8 | **3.318 t/ha** | 15.0 – 30.0 t/ha| $\pm 13.43\text{ q/acre}$| Captures intensive vineyard yield profiles |
-| **Banana** | 1,215 | **6.193 t/ha** | 18.0 – 55.0 t/ha| $\pm 25.06\text{ q/acre}$| High-biomass perennial; relative percentage error $<14\%$ |
-| **Papaya** | 139 | **15.148 t/ha** | 15.0 – 70.0 t/ha| $\pm 61.30\text{ q/acre}$| Reflects extreme spread between traditional & tissue-culture farms |
+| **Lentil** | 22 | **0.090 t/ha** | 0.6 – 1.1 t/ha | ±0.36 q/acre | Exceptional accuracy for winter rabi pulse |
+| **Blackgram** | 41 | **0.095 t/ha** | 0.5 – 1.0 t/ha | ±0.38 q/acre | Completely solved the -1898 R² failure of XGBoost |
+| **Mungbean** | 4,474 | **0.130 t/ha** | 0.3 – 0.8 t/ha | ±0.53 q/acre | Stable across 4,400+ national observations |
+| **Mothbeans** | 180 | **0.199 t/ha** | 0.2 – 0.5 t/ha | ±0.81 q/acre | Consistent arid pulse estimation |
+| **Pigeonpeas (Arhar)**| 2,916 | **0.202 t/ha** | 0.5 – 1.2 t/ha | ±0.82 q/acre | Sub-quintal error for staple Kharif legume |
+| **Chickpea (Gram)** | 2,659 | **0.223 t/ha** | 0.6 – 1.4 t/ha | ±0.90 q/acre | Successfully overturned XGBoost's -346 R² dispersion |
+| **Coconut (Copra)** | 735 | **0.360 t/ha** | 0.2 – 1.2 t/ha | ±1.46 q/acre | Unit conversion to copra tonnes verified (0.00014 t/nut) |
+| **Rice (Paddy)** | 5,840 | **0.373 t/ha** | 1.5 – 3.8 t/ha | ±1.51 q/acre | High-fidelity yield benchmark across all Indian states |
+| **Cotton** | 1,649 | **0.565 t/ha** | 0.8 – 2.2 t/ha | ±2.29 q/acre | Captures commercial lint regional distributions |
+| **Maize (Corn)** | 5,681 | **0.604 t/ha** | 1.2 – 3.5 t/ha | ±2.45 q/acre | Reflects intensive hybrid corn farming variations |
+| **Orange** | 78 | **0.686 t/ha** | 6.0 – 14.0 t/ha | ±2.78 q/acre | <8% relative error for citrus orchard crops |
+| **Jute** | 545 | **1.908 t/ha** | 6.0 – 14.0 t/ha | ±7.72 q/acre | Accurate fiber biomass yield tracking |
+| **Mango** | 84 | **2.680 t/ha** | 3.0 – 9.0 t/ha | ±10.85 q/acre| Robust median buffers against alternate-year bearing swings |
+| **Pomegranate** | 15 | **2.701 t/ha** | 8.0 – 16.0 t/ha | ±10.93 q/acre| Solid horticultural benchmark |
+| **Grapes** | 8 | **3.318 t/ha** | 15.0 – 30.0 t/ha| ±13.43 q/acre| Captures intensive vineyard yield profiles |
+| **Banana** | 1,215 | **6.193 t/ha** | 18.0 – 55.0 t/ha| ±25.06 q/acre| High-biomass perennial; relative percentage error <14% |
+| **Papaya** | 139 | **15.148 t/ha** | 15.0 – 70.0 t/ha| ±61.30 q/acre| Reflects extreme spread between traditional & tissue-culture farms |
 
 *Visual Validation Plot:* [`EXP_REG_03_yield_validation.png`](file:///c:/Users/Pavan/Downloads/VJ/ml/reports/regressor/EXP_REG_03_yield_validation.png) | *Model JSON:* [`crop_yield_lookup_v3.json`](file:///c:/Users/Pavan/Downloads/VJ/ml/experiments/regressor/models/crop_yield_lookup_v3.json)
 
@@ -601,7 +610,7 @@ The active production lookup was evaluated on **26,283 historical field records*
 - **Farmer Location:** Pune, Maharashtra (Lat: 18.52, Lon: 73.85)
 - **Total Arable Land:** 5.0 Acres
 - **Total Working Budget:** Rs. 1,00,000
-- **Soil Status:** Auto-resolved via regional database ($N=80, P=40, K=45, pH=6.5$)
+- **Soil Status:** Auto-resolved via regional database (N=80, P=40, K=45, pH=6.5)
 - **Season Detected:** Kharif (Current season based on calendar month)
 
 #### Step 1: Classifier Output & TreeSHAP Attribution
@@ -613,11 +622,11 @@ Top-3 Recommended Crops:
 3. Papaya  (Suitability Score: 0.10)
 ```
 
-**Key SHAP Driver:** 90-day precipitation (880 mm) and high relative humidity contributed $+0.42$ SHAP points to Rice and $+0.31$ to Jute.
+**Key SHAP Driver:** 90-day precipitation (880 mm) and high relative humidity contributed +0.42 SHAP points to Rice and +0.31 to Jute.
 
 #### Step 2: Economic Parameters Resolved
 
-| Crop | Yield ($t/ha$) | Yield (Quintals/Acre) | Price (Rs./Quintal) | Revenue/Acre (Rs.) | Cultivation Cost/Acre (Rs.) | Net Margin/Acre (Rs.) |
+| Crop | Yield (t/ha) | Yield (Quintals/Acre) | Price (Rs./Quintal) | Revenue/Acre (Rs.) | Cultivation Cost/Acre (Rs.) | Net Margin/Acre (Rs.) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Jute** | 2.80 | 11.33 | Rs. 4,500 | Rs. 50,985 | Rs. 18,000 | **+Rs. 32,985** |
 | **Papaya** | 15.00 | 60.70 | Rs. 1,200 | Rs. 72,840 | Rs. 45,000 | **+Rs. 27,840** |
@@ -627,12 +636,12 @@ Top-3 Recommended Crops:
 
 #### Step 3: SciPy HiGHS Optimal Allocation Result
 
-$$\begin{aligned}
-\text{Max Single Crop Cap: } & 0.65 \times 5.0 = 3.25\text{ Acres} \\
-\text{Jute Allocation: } & 3.25\text{ Acres } (65.0\% \text{ of Land}) \quad [\text{Cap Reached}] \\
-\text{Papaya Allocation: } & 0.92\text{ Acres } (18.4\% \text{ of Land}) \quad [\text{Budget Exhausted}] \\
-\text{Rice Allocation: } & 0.00\text{ Acres } (0.0\% \text{ of Land}) \quad [\text{Negative Margin}]
-\end{aligned}$$
+```text
+Max Single Crop Cap: 0.65 × 5.0 = 3.25 Acres
+Jute Allocation:     3.25 Acres (65.0% of Land) [Cap Reached]
+Papaya Allocation:   0.92 Acres (18.4% of Land) [Budget Exhausted]
+Rice Allocation:     0.00 Acres (0.0% of Land)  [Negative Margin]
+```
 
 #### Step 4: Summary Optimization Financial Balance Sheet
 
@@ -699,7 +708,7 @@ quadrantChart
 3. **Multi-Model Generative AI Explainability:**
    - Pairs exact mathematical TreeSHAP attribution and simplex slack values with plain-language Gemini generation, creating trust for both illiterate farmers and institutional judges.
 4. **Anti-Monoculture Algorithmic Guardrails:**
-   - Enforces a $65\%$ mathematical single-crop land ceiling, shielding farmers from pest outbreaks or single-commodity market crashes.
+   - Enforces a 65% mathematical single-crop land ceiling, shielding farmers from pest outbreaks or single-commodity market crashes.
 
 ### 7.2 Socio-Economic Impact on Rural Farming
 
