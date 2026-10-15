@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { hasSimulatedPrice } from './priceSimulation.js';
 
 const ResultsDashboard = lazy(() => import('./ResultsDashboard.jsx'));
@@ -36,6 +36,8 @@ function App() {
   const [soilSourceError, setSoilSourceError] = useState('');
   const [mandiFailures, setMandiFailures] = useState(null);
   const [error, setError] = useState('');
+  const prefetchControllerRef = useRef(null);
+  const submitControllerRef = useRef(null);
   const priceDetails = {
     ...(result?.price_metadata || {}),
     ...(result?.mandi_prices || {})
@@ -46,6 +48,7 @@ function App() {
 
   const updateLocation = (value) => {
     setLocation(value);
+    prefetchControllerRef.current?.abort();
     setSoilTestRequired(false);
     setSoilTest({ nitrogen: '', phosphorus: '', potassium: '', ph: '' });
     setSoilSummary(null);
@@ -53,6 +56,69 @@ function App() {
     setMandiFailures(null);
     setError('');
   };
+
+  useEffect(() => {
+    let origin;
+    try {
+      origin = new URL(API_BASE_URL, window.location.href).origin;
+    } catch {
+      return undefined;
+    }
+
+    if (origin === window.location.origin) return undefined;
+
+    const preconnect = document.createElement('link');
+    preconnect.rel = 'preconnect';
+    preconnect.href = origin;
+    preconnect.crossOrigin = 'anonymous';
+    const dnsPrefetch = document.createElement('link');
+    dnsPrefetch.rel = 'dns-prefetch';
+    dnsPrefetch.href = `//${new URL(origin).host}`;
+    document.head.append(preconnect, dnsPrefetch);
+    return () => {
+      preconnect.remove();
+      dnsPrefetch.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    const trimmedLocation = location.trim();
+    if (trimmedLocation.length < 2 || result) return undefined;
+
+    const controller = new AbortController();
+    prefetchControllerRef.current?.abort();
+    prefetchControllerRef.current = controller;
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/prefetch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ location: trimmedLocation }),
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          console.info(`Location prefetch was unavailable (HTTP ${response.status}); submit will fetch data.`);
+        }
+      } catch (prefetchError) {
+        if (prefetchError.name !== 'AbortError') {
+          console.info('Location prefetch was unavailable; submit will fetch data.', prefetchError);
+        }
+      }
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      if (prefetchControllerRef.current === controller) {
+        prefetchControllerRef.current = null;
+      }
+      controller.abort();
+    };
+  }, [location, result]);
+
+  useEffect(() => () => {
+    prefetchControllerRef.current?.abort();
+    submitControllerRef.current?.abort();
+  }, []);
 
   // Web Speech API for Voice Input
   const handleVoiceInput = () => {
@@ -91,6 +157,10 @@ function App() {
 
   const handleOptimize = async (e) => {
     e.preventDefault();
+    submitControllerRef.current?.abort();
+    prefetchControllerRef.current?.abort();
+    const controller = new AbortController();
+    submitControllerRef.current = controller;
     setLoading(true);
     setError('');
     setMandiFailures(null);
@@ -101,6 +171,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
+        signal: controller.signal,
         body: JSON.stringify({
           location: location.trim(),
           budget: parseFloat(budget),
@@ -148,10 +219,15 @@ function App() {
 
       setResult(data);
     } catch (error) {
-      console.error('Failed to fetch crop plan', error);
-      setError('Could not reach the crop-planning service. Please try again.');
+      if (error.name !== 'AbortError') {
+        console.error('Failed to fetch crop plan', error);
+        setError('Could not reach the crop-planning service. Please try again.');
+      }
     } finally {
-      setLoading(false);
+      if (submitControllerRef.current === controller) {
+        submitControllerRef.current = null;
+        setLoading(false);
+      }
     }
   };
 
@@ -280,10 +356,12 @@ function App() {
         )}
 
         {loading && (
-          <div className="loading-state">
+          <div className="loading-state" role="status" aria-live="polite" aria-busy="true">
             <div className="pulse-ring"></div>
-            <p>🛰️ Fetching location and historical weather...</p>
-            <p>🤖 Running crop, yield, and Mandi API/mock-price analysis...</p>
+            <p>Preparing location, soil, weather, crop, yield, and price data, then calculating your plan...</p>
+            <div className="request-progress" role="progressbar" aria-label="Preparing your crop plan">
+              <span />
+            </div>
           </div>
         )}
 

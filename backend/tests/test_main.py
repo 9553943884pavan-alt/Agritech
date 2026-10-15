@@ -2,10 +2,12 @@ import asyncio
 import json
 import os
 import unittest
+from datetime import date, timedelta
 from types import SimpleNamespace
 from unittest.mock import patch
 
 from backend import main
+from backend.cache import TTLCache
 
 
 class MockResponse:
@@ -31,7 +33,96 @@ class OptimizeFarmTests(unittest.TestCase):
 
             asyncio.run(run_lifespan())
 
+    def test_stale_weather_cache_fallback_is_flagged_as_simulated(self):
+        request = main.OptimizeRequest(
+            location="Nizamabad",
+            budget=50000,
+            land_acres=2,
+            soil_test={
+                "nitrogen": 80,
+                "phosphorus": 40,
+                "potassium": 45,
+                "ph": 6.5,
+            },
+        )
+        place = {
+            "name": "Nizamabad",
+            "country_code": "IN",
+            "admin1": "Telangana",
+            "admin2": "Nizamabad",
+            "latitude": 18.67,
+            "longitude": 78.09,
+        }
+        optimizer_result = SimpleNamespace(
+            status="success",
+            message="optimized",
+            allocations=[],
+            total_estimated_profit=1234.0,
+            utilized_budget=10000.0,
+            allocated_land_acres=1.0,
+            reasoning={},
+        )
+        with (
+            patch("backend.main._get_geocoding", return_value=({"results": [place]}, True)),
+            patch("backend.main.get_soil_health_summary", return_value=None),
+            patch(
+                "backend.main._get_weather_inputs",
+                return_value=((28.0, 900.0, 70.0), True),
+            ),
+            patch(
+                "backend.main._predict_crop_recommendations",
+                return_value=(["rice"], {"method": "test", "crops": []}),
+            ),
+            patch("backend.main._predict_yields", return_value={"rice": 4.2}),
+            patch("backend.main._yield_lookup", {"rice": {}}),
+            patch(
+                "backend.main.get_crop_prices",
+                return_value=({"rice": 3500.0}, {"rice": {"status": "live"}}),
+            ),
+            patch("backend.main.optimize_crop_allocation", return_value=optimizer_result),
+            patch(
+                "backend.main._generate_ai_reasoning",
+                return_value={"status": "not_configured", "error_code": "missing_api_key"},
+            ),
+        ):
+            result = main.optimize_farm(request)
+
+        self.assertTrue(result["plan_is_simulated"])
+        self.assertTrue(result["weather_data_is_stale"])
+        self.assertTrue(result["geocoding_data_is_stale"])
+        self.assertEqual(result["weather_source_details"]["status"], "stale_cache")
+        self.assertIn("cached location or historical weather", result["message"])
+
+    def test_expired_weather_value_is_used_only_after_provider_failure(self):
+        now = [0.0]
+        cache = TTLCache(max_entries=4, clock=lambda: now[0])
+        end_date = date.today() - timedelta(days=5)
+        start_date = end_date - timedelta(days=90)
+        key = (
+            "weather",
+            18.67,
+            78.09,
+            start_date.isoformat(),
+            end_date.isoformat(),
+        )
+        cached_weather = (28.0, 900.0, 70.0)
+        cache.get_or_load(key, lambda: cached_weather, 5)
+        now[0] = 6
+
+        with (
+            patch.object(main, "_request_data_cache", cache),
+            patch(
+                "backend.main._fetch_weather_inputs",
+                side_effect=main.HTTPException(502, "provider timed out"),
+            ),
+        ):
+            weather, is_stale = main._get_weather_inputs(18.67, 78.09)
+
+        self.assertEqual(weather, cached_weather)
+        self.assertTrue(is_stale)
+
     def setUp(self):
+        main._request_data_cache.clear()
         self.geocoding = {
             "results": [
                 {

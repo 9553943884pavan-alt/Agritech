@@ -1,0 +1,151 @@
+{
+  "mode": "localhost Uvicorn; external providers mocked with recorded fixtures",
+  "request_count": 20,
+  "rf_n_jobs": 1,
+  "golden_response_match": "exact",
+  "input_cycle": [
+    "Nizamabad",
+    "Pune",
+    "Ludhiana",
+    "Guntur",
+    "Indore"
+  ],
+  "latency_ms": {
+    "p50": 40.818,
+    "p95": 162.474,
+    "max": 765.782,
+    "cold_first_request": 765.782,
+    "warm_p50_excluding_first": 40.355,
+    "warm_p95_excluding_first": 66.468,
+    "cold_start_process_to_first_success": 4922.757
+  },
+  "request_latencies_ms": [
+    765.782,
+    36.439,
+    50.938,
+    130.72,
+    46.984,
+    41.558,
+    30.876,
+    36.191,
+    40.355,
+    41.281,
+    34.914,
+    37.328,
+    37.501,
+    36.326,
+    59.329,
+    48.858,
+    33.124,
+    34.044,
+    43.004,
+    48.824
+  ],
+  "startup_stage_ms": {
+    "model_and_yield_load": 1433.068,
+    "price_cache_load": 0.521
+  },
+  "stages": {
+    "ai_reasoning": {
+      "mean_ms": 0.046,
+      "p95_ms": 0.083,
+      "max_ms": 0.085
+    },
+    "classifier_and_shap": {
+      "mean_ms": 60.789,
+      "p95_ms": 66.226,
+      "max_ms": 726.457
+    },
+    "economics_load": {
+      "mean_ms": 0.313,
+      "p95_ms": 0.474,
+      "max_ms": 0.549
+    },
+    "geocoding": {
+      "mean_ms": 0.113,
+      "p95_ms": 0.152,
+      "max_ms": 0.16
+    },
+    "linear_program": {
+      "mean_ms": 2.587,
+      "p95_ms": 3.588,
+      "max_ms": 3.603
+    },
+    "price_resolution": {
+      "mean_ms": 5.728,
+      "p95_ms": 6.284,
+      "max_ms": 98.188
+    },
+    "rf_predict_proba": {
+      "mean_ms": 18.38,
+      "p95_ms": 24.024,
+      "max_ms": 39.404
+    },
+    "scipy_linprog": {
+      "mean_ms": 2.038,
+      "p95_ms": 2.96,
+      "max_ms": 3.019
+    },
+    "shap_explainer_init": {
+      "mean_ms": 21.871,
+      "p95_ms": 21.871,
+      "max_ms": 21.871
+    },
+    "shap_import": {
+      "mean_ms": 656.816,
+      "p95_ms": 656.816,
+      "max_ms": 656.816
+    },
+    "shap_values": {
+      "mean_ms": 8.184,
+      "p95_ms": 9.518,
+      "max_ms": 9.851
+    },
+    "soil_health_card": {
+      "mean_ms": 0.206,
+      "p95_ms": 0.456,
+      "max_ms": 0.52
+    },
+    "soil_inputs": {
+      "mean_ms": 0.406,
+      "p95_ms": 0.649,
+      "max_ms": 0.658
+    },
+    "total": {
+      "mean_ms": 72.596,
+      "p95_ms": 157.347,
+      "max_ms": 738.776
+    },
+    "weather": {
+      "mean_ms": 0.065,
+      "p95_ms": 0.122,
+      "max_ms": 0.148
+    },
+    "yield_lookup": {
+      "mean_ms": 0.054,
+      "p95_ms": 0.083,
+      "max_ms": 0.114
+    }
+  },
+  "cold_first_request_stages": {
+    "geocoding": 0.16,
+    "soil_health_card": 0.52,
+    "soil_inputs": 0.649,
+    "weather": 0.09,
+    "rf_predict_proba": 39.404,
+    "shap_import": 656.816,
+    "shap_explainer_init": 21.871,
+    "shap_values": 7.982,
+    "classifier_and_shap": 726.457,
+    "yield_lookup": 0.114,
+    "price_resolution": 1.22,
+    "economics_load": 0.339,
+    "scipy_linprog": 3.019,
+    "linear_program": 3.587,
+    "ai_reasoning": 0.04,
+    "total": 738.776
+  },
+  "frontend": {
+    "measurement": "Build chunk sizes are measured by `npm run build`; browser render and submit-to-chart times require a browser session."
+  }
+}

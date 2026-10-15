@@ -134,4 +134,50 @@ describe('frontend optimizer integration', () => {
     );
     expect(screen.getByPlaceholderText('e.g., Nizamabad')).toBeTruthy();
   });
+
+  it('continues to the single optimize request when prefetch fails', async () => {
+    const optimizerResponse = {
+      message: 'Soil inputs and prices are estimates.',
+      resolved_location: 'Nizamabad',
+      total_estimated_profit: 1000,
+      ai_reasoning: { status: 'not_configured' },
+      utilized_budget: 1000,
+      allocated_land_acres: 1,
+      allocations: [
+        {
+          crop: 'rice',
+          allocated_acres: 1,
+          expected_yield_tonnes: 1,
+          profit_est: 1000,
+        },
+      ],
+      regional_data: { temperature: 28, rainfall: 900 },
+    };
+    const fetchMock = vi.fn()
+      .mockRejectedValueOnce(new Error('prefetch unavailable'))
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => optimizerResponse,
+      });
+    vi.stubGlobal('fetch', fetchMock);
+    render(<App />);
+    fireEvent.change(screen.getByPlaceholderText('e.g., Nizamabad'), {
+      target: { value: 'Nizamabad' },
+    });
+    await new Promise((resolve) => window.setTimeout(resolve, 350));
+
+    fireEvent.change(screen.getByPlaceholderText('e.g., 50000'), {
+      target: { value: '50000' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('e.g., 10'), {
+      target: { value: '2' },
+    });
+    fireEvent.submit(screen.getByRole('button', { name: 'Optimize My Farm' }).closest('form'));
+
+    expect(await screen.findByRole('button', { name: 'Plan Another Farm' })).toBeTruthy();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[0][0]).toMatch(/\/api\/prefetch$/);
+    expect(fetchMock.mock.calls[1][0]).toMatch(/\/api\/optimize$/);
+  });
 });

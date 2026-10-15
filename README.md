@@ -173,7 +173,36 @@ The optimize response includes `classifier_reasoning`, `optimizer_reasoning`, an
   * **Description:** The React frontend accepts location, land, and budget. The FastAPI backend resolves the district, displays Soil Health Card category summaries when available, uses compatible SoilGrids pH estimates and clearly labelled static mock values for unavailable or incompatible classifier features, then combines historical weather, the trained classifier, recent district/state/season yield estimates, verified fresh TGK prices when available, cached historical CEDA prices, and prototype mock prices in the optimizer. Price sources and historical dates are shown; plans that use mock soil, mock prices, or proxy prices are explicitly marked simulated.
   * **Local API:** Set `VITE_API_URL=http://127.0.0.1:8000` before `npm run dev` to route the local frontend to the local FastAPI backend. Deployment should set `VITE_API_URL` to the deployed backend URL.
 
-### Market price data notes
+  ### Latency instrumentation and offline benchmark
+
+  Set `TIMING=1` to add per-stage measurements to backend logs and the
+  `Server-Timing` response header. The frontend also best-effort posts a location
+  to `/api/prefetch` after the village field changes, warming geocoding, weather,
+  and soil caches while the farmer completes the form. Prefetch failures do not
+  block optimization.
+
+  From the repository root, run the deterministic benchmark against recorded
+  provider fixtures (no live API calls):
+
+  ```powershell
+  $env:TIMING = "1"
+  .\.venv\Scripts\python.exe scripts\benchmark.py --requests 20 --compare-golden data\bench_golden.json --output data\bench_after.json
+  ```
+
+  The five unoptimized response fixtures are in `data/bench_golden.json`; the
+  offline baseline measurements are in `data/bench_baseline.json`. Run backend
+  and frontend checks with:
+
+  ```powershell
+  .\.venv\Scripts\python.exe -m pytest backend\tests -q
+  Push-Location frontend
+  npm test
+  npm run lint
+  npm run build
+  Pop-Location
+  ```
+
+  ### Market price data notes
 
 * `data/ceda_crop_map.final.json` contains the finalized mapping for the 22 classifier classes. Kidney beans has no verified CEDA commodity ID and always uses the labelled mock price; moth bean uses a processed-dal proxy and is marked simulated.
 * `data/ceda_price_cache.csv` is an optional local artifact and is intentionally git-ignored. The application validates each row against its commodity mapping and uses only rows marked neither sparse nor incomplete. It labels accepted values with their observation month and source.

@@ -17,11 +17,14 @@ import json
 import logging
 import os
 import statistics
+import time
+from concurrent.futures import ThreadPoolExecutor
 import urllib.error
 import urllib.request
 import urllib.parse
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from contextvars import copy_context
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
@@ -41,15 +44,31 @@ from .data_sources import (
     initialize_price_cache,
     normalize_name,
 )
+from .cache import TTLCache
 from .optimizer.lp_solver import optimize_crop_allocation
+from .timing import (
+    outbound_http_call,
+    record_startup_timing,
+    remaining_timeout,
+    request_budget_middleware,
+    timed_call,
+    timing_middleware,
+)
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    initialize_price_cache()
+    started = time.perf_counter()
+    timed_call("price_cache_load", initialize_price_cache)
+    record_startup_timing("price_cache_load", started)
+    started = time.perf_counter()
+    _warm_up_runtime()
+    record_startup_timing("model_and_solver_warmup", started)
     yield
 
 
 app = FastAPI(title="AgriTech Optimization API", lifespan=lifespan)
+app.middleware("http")(timing_middleware)
+app.middleware("http")(request_budget_middleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -73,6 +92,10 @@ class OptimizeRequest(BaseModel):
     soil_test: SoilTestValues | None = None
 
 
+class PrefetchRequest(BaseModel):
+    location: str = Field(min_length=2)
+
+
 # ── Resolve paths dynamically (Rules: pathlib relative to __file__) ───────────
 BACKEND_DIR       = Path(__file__).resolve().parent
 PROJECT_ROOT      = BACKEND_DIR.parent
@@ -89,6 +112,64 @@ _clf_meta     = None
 _reg_meta     = None       # kept for logging/metadata only
 _yield_lookup = None       # v3 recent district-aware historical yield lookup
 _shap_explainer = None
+_io_executor = ThreadPoolExecutor(max_workers=12, thread_name_prefix="crop-data")
+_request_data_cache: TTLCache[tuple[Any, ...], Any] = TTLCache(max_entries=1024)
+
+
+def _submit_io(function: Any, *args: Any, **kwargs: Any) -> Any:
+    context = copy_context()
+    return _io_executor.submit(context.run, function, *args, **kwargs)
+
+
+def _fetch_geocoding(location: str) -> dict[str, Any]:
+    geo_url = (
+        "https://geocoding-api.open-meteo.com/v1/search"
+        f"?name={urllib.parse.quote(location)}&count=5&countryCode=IN"
+    )
+    try:
+        with outbound_http_call(
+            "open_meteo_geocoding",
+            fallback_on_error=True,
+        ) as call:
+            with urllib.request.urlopen(
+                geo_url,
+                timeout=remaining_timeout(5),
+            ) as response:
+                call["status"] = getattr(response, "status", 200)
+                return json.loads(response.read().decode())
+    except (OSError, json.JSONDecodeError) as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Location lookup failed; no crop plan was generated: {exc}",
+        ) from exc
+
+
+def _geocoding_cache_key(location: str) -> tuple[str, str]:
+    return "geocoding", normalize_name(location)
+
+
+def _get_geocoding(location: str) -> tuple[dict[str, Any], bool]:
+    key = _geocoding_cache_key(location)
+    try:
+        response = _request_data_cache.get_or_load(
+            key,
+            lambda: _fetch_geocoding(location),
+            7 * 24 * 60 * 60,
+            is_success=lambda result: any(
+                item.get("country_code", "").upper() == "IN"
+                and item.get("admin1")
+                and item.get("admin2")
+                for item in result.get("results", [])
+                if isinstance(item, dict)
+            ),
+            negative_ttl_seconds=30,
+        )
+        return response, False
+    except HTTPException:
+        stale_response = _request_data_cache.get_stale(key)
+        if stale_response is not None:
+            return stale_response, True
+        raise
 
 
 def _generate_ai_reasoning(
@@ -105,7 +186,13 @@ def _generate_ai_reasoning(
     if not api_key:
         return {"status": "not_configured", "error_code": "missing_api_key"}
 
-    model = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite").strip()
+    configured_model = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite").strip()
+    candidate_models = [configured_model]
+    if "flash" in configured_model.lower():
+        for fallback in ("gemini-3.5-flash-lite", "gemma-4-26b-a4b-it", "gemma-4-31b-it"):
+            if fallback not in candidate_models:
+                candidate_models.append(fallback)
+
     evidence = {
         "farmer_inputs": farmer_inputs,
         "classifier": classifier_reasoning,
@@ -144,33 +231,57 @@ def _generate_ai_reasoning(
             "responseMimeType": "application/json",
         },
     }).encode("utf-8")
-    request = urllib.request.Request(
-        f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-        data=body,
-        headers={
-            "x-goog-api-key": api_key,
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(request, timeout=20) as response:
-            provider_response = json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        logger.warning("Gemini reasoning request failed with HTTP status %s.", exc.code)
-        return {
-            "status": "error",
-            "error_code": f"provider_http_{exc.code}",
-        }
-    except (urllib.error.URLError, TimeoutError):
-        logger.warning("Gemini reasoning request could not reach the provider.")
-        return {"status": "error", "error_code": "provider_unavailable"}
-    except (UnicodeDecodeError, json.JSONDecodeError):
-        logger.warning("Gemini reasoning provider returned a malformed response.")
-        return {"status": "error", "error_code": "invalid_provider_response"}
+
+    provider_response = None
+    model_used = configured_model
+    last_error_code = "provider_unavailable"
+
+    for current_model in candidate_models:
+        request = urllib.request.Request(
+            f"https://generativelanguage.googleapis.com/v1beta/models/{current_model}:generateContent",
+            data=body,
+            headers={
+                "x-goog-api-key": api_key,
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with outbound_http_call("gemini_reasoning") as call:
+                with urllib.request.urlopen(
+                    request,
+                    timeout=remaining_timeout(15),
+                ) as response:
+                    call["status"] = getattr(response, "status", 200)
+                    provider_response = json.loads(response.read().decode("utf-8"))
+            model_used = current_model
+            break
+        except urllib.error.HTTPError as exc:
+            logger.warning("Gemini reasoning request failed on model %s with HTTP status %s.", current_model, exc.code)
+            last_error_code = f"provider_http_{exc.code}"
+        except (urllib.error.URLError, TimeoutError):
+            logger.warning("Gemini reasoning request could not reach model %s.", current_model)
+            last_error_code = "provider_unavailable"
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            logger.warning("Gemini reasoning provider returned a malformed response for model %s.", current_model)
+            last_error_code = "invalid_provider_response"
+
+    if provider_response is None:
+        return {"status": "error", "error_code": last_error_code}
 
     try:
-        content = provider_response["candidates"][0]["content"]["parts"][0]["text"]
+        content = provider_response["candidates"][0]["content"]["parts"][0]["text"].strip()
+        if content.startswith("```"):
+            lines = content.splitlines()
+            if lines and lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].startswith("```"):
+                lines = lines[:-1]
+            content = "\n".join(lines).strip()
+        first_brace = content.find("{")
+        last_brace = content.rfind("}")
+        if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+            content = content[first_brace:last_brace + 1]
         generated = json.loads(content)
         classifier_reasons = _validate_reason_items(
             generated["classifier_reasons"], recommended_crops
@@ -199,12 +310,13 @@ def _generate_ai_reasoning(
 
     return {
         "status": "ready",
-        "model": model,
+        "model": model_used,
         "classifier_summary": classifier_summary.strip(),
         "classifier_reasons": classifier_reasons,
         "optimizer_summary": optimizer_summary.strip(),
         "allocation_reasons": allocation_reasons,
     }
+
 
 
 def _validate_reason_items(
@@ -239,6 +351,7 @@ def _validate_reason_items(
     return [{"crop": crop, "reason": reasons[crop]} for crop in expected_crops]
 
 def _load_models():
+    started = time.perf_counter()
     global _clf, _clf_meta, _reg_meta, _yield_lookup, _shap_explainer
     _shap_explainer = None
 
@@ -250,6 +363,7 @@ def _load_models():
 
     if clf_path.exists():
         _clf = joblib.load(clf_path)
+        _clf.n_jobs = 1
         if cmeta_path.exists():
             with open(cmeta_path, "r", encoding="utf-8") as f:
                 _clf_meta = json.load(f)
@@ -270,8 +384,29 @@ def _load_models():
         with open(ylookup_path, "r", encoding="utf-8") as f:
             _yield_lookup = json.load(f)
         print("[INFO] crop_yield_lookup_v3.json loaded successfully.")
+    record_startup_timing("model_and_yield_load", started)
 
 _load_models()
+
+
+def _warm_up_runtime() -> None:
+    if _clf is not None and _clf_meta is not None:
+        _predict_crop_recommendations(
+            n=80,
+            p=40,
+            k=45,
+            temperature=28,
+            humidity=60,
+            ph=6.5,
+            rainfall=900,
+            top_k=3,
+        )
+    optimize_crop_allocation(
+        land_acres=1,
+        budget=1,
+        candidate_crops=["rice", "maize", "chickpea"],
+    )
+
 
 # ── Classifier helper ─────────────────────────────────────────────────────────
 def _predict_crop_recommendations(
@@ -317,16 +452,26 @@ def _predict_crop_recommendations(
         [[feature_values[feature] for feature in feature_cols]],
         dtype=np.float32,
     )
-    probs = _clf.predict_proba(inp)[0]
+    probs = timed_call("rf_predict_proba", _clf.predict_proba, inp)[0]
     positive_class_indices = np.flatnonzero(probs > 0)
     top_idx = positive_class_indices[
         np.argsort(probs[positive_class_indices])[::-1][:top_k]
     ]
     if _shap_explainer is None:
-        import shap
+        import importlib
 
-        _shap_explainer = shap.TreeExplainer(_clf)
-    raw_values = _shap_explainer.shap_values(inp, check_additivity=True)
+        shap = timed_call("shap_import", importlib.import_module, "shap")
+        _shap_explainer = timed_call(
+            "shap_explainer_init",
+            shap.TreeExplainer,
+            _clf,
+        )
+    raw_values = timed_call(
+        "shap_values",
+        _shap_explainer.shap_values,
+        inp,
+        check_additivity=True,
+    )
     if isinstance(raw_values, list):
         shap_values = np.stack([np.asarray(values)[0] for values in raw_values], axis=-1)
     else:
@@ -441,21 +586,210 @@ def _predict_yields(
 
 
 # ── Main API endpoint ─────────────────────────────────────────────────────────
+def _fetch_weather_inputs(
+    latitude: float,
+    longitude: float,
+    start_date: date,
+    end_date: date,
+) -> tuple[float, float, float]:
+    archive_url = (
+        f"https://archive-api.open-meteo.com/v1/archive"
+        f"?latitude={latitude}&longitude={longitude}"
+        f"&start_date={start_date}&end_date={end_date}"
+        f"&hourly=temperature_2m,relative_humidity_2m"
+        f"&daily=precipitation_sum"
+        f"&timezone=auto"
+    )
+    try:
+        with outbound_http_call(
+            "open_meteo_weather",
+            fallback_on_error=True,
+        ) as call:
+            with urllib.request.urlopen(
+                archive_url,
+                timeout=remaining_timeout(5),
+            ) as response:
+                call["status"] = getattr(response, "status", 200)
+                weather_response = json.loads(response.read().decode())
+        temperatures = [
+            value
+            for value in weather_response["hourly"]["temperature_2m"]
+            if value is not None
+        ]
+        precipitation = [
+            value
+            for value in weather_response["daily"]["precipitation_sum"]
+            if value is not None
+        ]
+        humidities = [
+            value
+            for value in weather_response["hourly"]["relative_humidity_2m"]
+            if value is not None
+        ]
+        if not temperatures or not precipitation or not humidities:
+            raise ValueError("Historical weather response was missing required measurements.")
+        return (
+            round(statistics.mean(temperatures), 2),
+            round(sum(precipitation), 2),
+            round(statistics.mean(humidities), 2),
+        )
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Historical weather lookup failed; no crop plan was generated: {exc}",
+        ) from exc
+
+
+def _get_weather_inputs(
+    latitude: float,
+    longitude: float,
+) -> tuple[tuple[float, float, float], bool]:
+    end_date = date.today() - timedelta(days=5)
+    start_date = end_date - timedelta(days=90)
+    key = (
+        "weather",
+        latitude,
+        longitude,
+        start_date.isoformat(),
+        end_date.isoformat(),
+    )
+    try:
+        weather = _request_data_cache.get_or_load(
+            key,
+            lambda: _fetch_weather_inputs(
+                latitude,
+                longitude,
+                start_date,
+                end_date,
+            ),
+            8 * 60 * 60,
+        )
+        return weather, False
+    except HTTPException:
+        stale_weather = _request_data_cache.get_stale(key)
+        if stale_weather is not None:
+            return stale_weather, True
+        raise
+
+
+def _prefetch_location(location: str) -> dict[str, Any]:
+    try:
+        geo_resp, geocoding_is_stale = timed_call(
+            "prefetch_geocoding",
+            _get_geocoding,
+            location,
+        )
+    except HTTPException as exc:
+        return {
+            "status": "unavailable",
+            "stage": "geocoding",
+            "reason": str(exc.detail),
+        }
+
+    place = next(
+        (
+            item
+            for item in geo_resp.get("results", [])
+            if item.get("country_code", "").upper() == "IN"
+            and item.get("admin1")
+            and item.get("admin2")
+        ),
+        None,
+    )
+    if place is None:
+        return {
+            "status": "unavailable",
+            "stage": "geocoding",
+            "reason": "Could not resolve this location to an Indian district and state.",
+        }
+
+    latitude = place["latitude"]
+    longitude = place["longitude"]
+    state = place["admin1"]
+    district = place["admin2"]
+    futures = {
+        "weather": _submit_io(
+            _get_weather_inputs,
+            latitude,
+            longitude,
+        ),
+        "soil": _submit_io(
+            get_soil_inputs,
+            latitude=latitude,
+            longitude=longitude,
+            location_names=[
+                place.get("name", ""),
+                place.get("admin3", ""),
+                district,
+            ],
+        ),
+        "soil_health_card": _submit_io(
+            get_soil_health_summary,
+            state,
+            district,
+        ),
+    }
+    stages: dict[str, dict[str, str]] = {
+        "geocoding": {
+            "status": "stale_cache" if geocoding_is_stale else "ready",
+        },
+    }
+    for stage, future in futures.items():
+        try:
+            value = future.result()
+            if stage == "weather":
+                _, is_stale = value
+                stages[stage] = {
+                    "status": "stale_cache" if is_stale else "ready",
+                }
+            elif stage == "soil":
+                _, provenance, _ = value
+                stages[stage] = {
+                    "status": (
+                        "fallback"
+                        if all(item.get("status") == "mock" for item in provenance.values())
+                        else "ready"
+                    ),
+                }
+            else:
+                stages[stage] = {
+                    "status": "ready" if value is not None else "not_available",
+                }
+        except (DataSourceError, HTTPException, TimeoutError) as exc:
+            stages[stage] = {
+                "status": "unavailable",
+                "reason": str(getattr(exc, "detail", exc)),
+            }
+
+    return {
+        "status": "warmed",
+        "resolved_location": ", ".join(
+            part
+            for index, part in enumerate(
+                [place.get("name"), district, state]
+            )
+            if part and part not in [place.get("name"), district, state][:index]
+        ),
+        "stages": stages,
+    }
+
+
+@app.post("/api/prefetch")
+def prefetch_location(req: PrefetchRequest):
+    return _prefetch_location(req.location)
+
+
 @app.post("/api/optimize")
 def optimize_farm(req: OptimizeRequest):
     # 1. Resolve the farmer's location to a district and state.
-    geo_url = (
-        f"https://geocoding-api.open-meteo.com/v1/search"
-        f"?name={urllib.parse.quote(req.location)}&count=5&countryCode=IN"
-    )
     try:
-        with urllib.request.urlopen(geo_url, timeout=15) as response:
-            geo_resp = json.loads(response.read().decode())
-    except (OSError, json.JSONDecodeError) as exc:
-        raise HTTPException(
-            status_code=502,
-            detail=f"Location lookup failed; no crop plan was generated: {exc}",
-        ) from exc
+        geo_resp, geocoding_is_stale = timed_call(
+            "geocoding",
+            _get_geocoding,
+            req.location,
+        )
+    except HTTPException:
+        raise
 
     results = geo_resp.get("results", [])
     if not results:
@@ -485,12 +819,44 @@ def optimize_farm(req: OptimizeRequest):
         part for index, part in enumerate(resolved_parts) if part and part not in resolved_parts[:index]
     )
 
+    # These provider lookups need only the geocoded location and can overlap.
+    soil_summary_future = _submit_io(
+        timed_call,
+        "soil_health_card",
+        get_soil_health_summary,
+        state_label,
+        district_label,
+    )
+    weather_future = _submit_io(
+        timed_call,
+        "weather",
+        _get_weather_inputs,
+        lat,
+        lon,
+    )
+    soil_inputs_future = (
+        _submit_io(
+            timed_call,
+            "soil_inputs",
+            get_soil_inputs,
+            latitude=lat,
+            longitude=lon,
+            location_names=[
+                place.get("name", ""),
+                place.get("admin3", ""),
+                district_label,
+            ],
+        )
+        if req.soil_test is None
+        else None
+    )
+
     # Keep the public Soil Health Card summary for display, but obtain classifier
     # values from compatible SoilGrids estimates or explicitly labelled mock data.
     soil_summary = None
     soil_source_error = None
     try:
-        soil_summary = get_soil_health_summary(state_label, district_label)
+        soil_summary = soil_summary_future.result()
     except DataSourceError as exc:
         soil_source_error = str(exc)
 
@@ -511,14 +877,10 @@ def optimize_farm(req: OptimizeRequest):
         }
     else:
         try:
-            soil_data, soil_data_provenance, soil_source_details = get_soil_inputs(
-                latitude=lat,
-                longitude=lon,
-                location_names=[
-                    place.get("name", ""),
-                    place.get("admin3", ""),
-                    district_label,
-                ],
+            if soil_inputs_future is None:
+                raise RuntimeError("Soil input lookup was not scheduled.")
+            soil_data, soil_data_provenance, soil_source_details = (
+                soil_inputs_future.result()
             )
         except DataSourceError as exc:
             raise HTTPException(
@@ -527,44 +889,7 @@ def optimize_farm(req: OptimizeRequest):
             ) from exc
 
     # 2. Fetch actual historical weather inputs.
-    end_date   = date.today() - timedelta(days=5)
-    start_date = end_date - timedelta(days=90)
-    archive_url = (
-        f"https://archive-api.open-meteo.com/v1/archive"
-        f"?latitude={lat}&longitude={lon}"
-        f"&start_date={start_date}&end_date={end_date}"
-        f"&hourly=temperature_2m,relative_humidity_2m"
-        f"&daily=precipitation_sum"
-        f"&timezone=auto"
-    )
-    try:
-        with urllib.request.urlopen(archive_url, timeout=20) as response:
-            w_resp = json.loads(response.read().decode())
-            temps = [
-                value
-                for value in w_resp["hourly"]["temperature_2m"]
-                if value is not None
-            ]
-            precips = [
-                value
-                for value in w_resp["daily"]["precipitation_sum"]
-                if value is not None
-            ]
-            humidities = [
-                value
-                for value in w_resp["hourly"]["relative_humidity_2m"]
-                if value is not None
-            ]
-            if not temps or not precips or not humidities:
-                raise ValueError("Historical weather response was missing required measurements.")
-            temp = round(statistics.mean(temps), 2)
-            rain = round(sum(precips), 2)
-            humidity = round(statistics.mean(humidities), 2)
-    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
-        raise HTTPException(
-            status_code=502,
-            detail=f"Historical weather lookup failed; no crop plan was generated: {exc}",
-        ) from exc
+    (temp, rain, humidity), weather_is_stale = weather_future.result()
 
     # 3. Classify crops from exact values in the farmer's soil test.
     n, p, k, ph = (
@@ -573,7 +898,9 @@ def optimize_farm(req: OptimizeRequest):
         soil_data["potassium"],
         soil_data["ph"],
     )
-    candidates, classifier_reasoning = _predict_crop_recommendations(
+    candidates, classifier_reasoning = timed_call(
+        "classifier_and_shap",
+        _predict_crop_recommendations,
         n=n, p=p, k=k,
         temperature=temp,
         humidity=humidity,
@@ -586,7 +913,9 @@ def optimize_farm(req: OptimizeRequest):
     # 4. Resolve yield estimates against the geocoded state and current season.
     current_month = date.today().month
     season = "Kharif" if 6 <= current_month <= 11 else "Rabi"
-    custom_yields = _predict_yields(
+    custom_yields = timed_call(
+        "yield_lookup",
+        _predict_yields,
         candidates,
         state=state_label,
         season=season,
@@ -600,7 +929,9 @@ def optimize_farm(req: OptimizeRequest):
 
     # Prefer district-level Mandi reports, then the API's state average.
     try:
-        crop_prices, mandi_details = get_crop_prices(
+        crop_prices, mandi_details = timed_call(
+            "price_resolution",
+            get_crop_prices,
             candidates,
             state=state_label,
             district=district_label,
@@ -640,10 +971,17 @@ def optimize_farm(req: OptimizeRequest):
         or mandi_details.get(crop, {}).get("is_stale", False)
         for crop in optimized_crops
     )
-    plan_is_simulated = soil_data_is_simulated or price_data_is_simulated
+    plan_is_simulated = (
+        soil_data_is_simulated
+        or price_data_is_simulated
+        or geocoding_is_stale
+        or weather_is_stale
+    )
 
     # 6. Optimize using resolved market prices and clearly labelled mock fallbacks.
-    lp_result = optimize_crop_allocation(
+    lp_result = timed_call(
+        "linear_program",
+        optimize_crop_allocation,
         land_acres=req.land_acres,
         budget=req.budget,
         candidate_crops=optimized_crops,
@@ -677,7 +1015,9 @@ def optimize_farm(req: OptimizeRequest):
         }
         for crop in candidates
     }
-    ai_reasoning = _generate_ai_reasoning(
+    ai_reasoning = timed_call(
+        "ai_reasoning",
+        _generate_ai_reasoning,
         farmer_inputs={
             "soil": {"N": n, "P": p, "K": k, "pH": ph},
             "weather": {
@@ -697,7 +1037,7 @@ def optimize_farm(req: OptimizeRequest):
         crop_economics=crop_economics,
     )
 
-    return {
+    result = {
         "status": lp_result.status,
         "regional_data": {
             **soil_data,
@@ -749,7 +1089,12 @@ def optimize_farm(req: OptimizeRequest):
         "allocated_land_acres":     lp_result.allocated_land_acres,
         "message": (
             (
-                "SIMULATED PROTOTYPE PLAN: one or more soil or crop-price inputs are mock "
+                (
+                    "SIMULATED PLAN: a cached location or historical weather value was used "
+                    "after a live lookup failed; treat results as illustrative. "
+                )
+                if geocoding_is_stale or weather_is_stale
+                else "SIMULATED PROTOTYPE PLAN: one or more soil or crop-price inputs are mock "
                 "or stale; the displayed profit is not a real forecast. "
                 if plan_is_simulated
                 else "Soil inputs and prices came from their indicated data sources; profit remains an estimate. "
@@ -759,3 +1104,18 @@ def optimize_farm(req: OptimizeRequest):
             f"{lp_result.message}"
         )
     }
+    if geocoding_is_stale:
+        result["geocoding_data_is_stale"] = True
+        result["geocoding_source_details"] = {
+            "source": "Open-Meteo geocoding cache",
+            "status": "stale_cache",
+            "warning": "The live location lookup failed; a previously resolved location was used.",
+        }
+    if weather_is_stale:
+        result["weather_data_is_stale"] = True
+        result["weather_source_details"] = {
+            "source": "Open-Meteo archive cache",
+            "status": "stale_cache",
+            "warning": "The live historical weather lookup failed; cached weather values were used.",
+        }
+    return result

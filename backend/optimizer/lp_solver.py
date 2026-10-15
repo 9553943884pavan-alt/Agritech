@@ -1,15 +1,18 @@
 import json
+from functools import lru_cache
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, asdict, field
 import numpy as np
 from scipy.optimize import linprog
+from ..timing import timed_call
 
 # Resolve paths dynamically
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parents[1]
 UNIVERSAL_DATA_DIR = PROJECT_ROOT / "universal_data"
 
+@lru_cache(maxsize=1)
 def load_universal_economics() -> Dict[str, Any]:
     """Loads default crop economics and baseline costs from universal_data."""
     econ_file = UNIVERSAL_DATA_DIR / "crop_economics.json"
@@ -81,7 +84,7 @@ def optimize_crop_allocation(
             allocations=[]
         )
 
-    all_economics = load_universal_economics()
+    all_economics = timed_call("economics_load", load_universal_economics)
     
     # Clean and filter candidate crops
     clean_candidates = [c.lower().strip() for c in candidate_crops]
@@ -156,7 +159,15 @@ def optimize_crop_allocation(
     bounds = [(0, single_crop_cap) for _ in range(n)]
 
     # Solve via Highs interior point / simplex solver
-    res = linprog(c, A_ub=A_ub, b_ub=b_ub, bounds=bounds, method="highs")
+    res = timed_call(
+        "scipy_linprog",
+        linprog,
+        c,
+        A_ub=A_ub,
+        b_ub=b_ub,
+        bounds=bounds,
+        method="highs",
+    )
 
     allocations_list = []
     max_crop_acres = single_crop_cap

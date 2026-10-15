@@ -3,6 +3,7 @@
 from concurrent.futures import ThreadPoolExecutor
 import csv
 from datetime import date
+from functools import lru_cache
 import json
 import math
 import re
@@ -15,6 +16,8 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 import requests
+from .cache import TTLCache
+from .timing import outbound_http_call, remaining_timeout, requests_timeout
 
 SOIL_GRAPHQL_URL = "https://soilhealth4.dac.gov.in/"
 SOILGRIDS_URL = "https://rest.isric.org/soilgrids/v2.0/properties/query"
@@ -38,8 +41,7 @@ RICE_COMMODITY_ID = 2
 TGK_ELIGIBLE_CROPS = frozenset()
 
 _CACHE_SECONDS = 3600
-_cache: dict[str, tuple[float, Any]] = {}
-_cache_lock = Lock()
+_cache: TTLCache[str, Any] = TTLCache(max_entries=512)
 _mandi_request_lock = Lock()
 _mandi_rate_limit_lock = Lock()
 _mandi_retry_after = 0.0
@@ -77,17 +79,19 @@ def _get_mandi_json(endpoint: str, params: dict[str, str]) -> dict[str, Any]:
                     status_code=429,
                 )
         try:
-            response = requests.get(
-                endpoint,
-                params=params,
-                headers={
-                    "Accept": "application/json",
-                    "User-Agent": "AgriTech Crop Optimizer/1.0",
-                },
-                timeout=4,
-            )
-            response.raise_for_status()
-            payload = response.json()
+            with outbound_http_call("tgk_mandi", fallback_on_error=True) as call:
+                response = requests.get(
+                    endpoint,
+                    params=params,
+                    headers={
+                        "Accept": "application/json",
+                        "User-Agent": "AgriTech Crop Optimizer/1.0",
+                    },
+                    timeout=requests_timeout(5),
+                )
+                call["status"] = response.status_code
+                response.raise_for_status()
+                payload = response.json()
         except requests.HTTPError as exc:
             status_code = exc.response.status_code if exc.response is not None else None
             if status_code == 429:
@@ -97,7 +101,7 @@ def _get_mandi_json(endpoint: str, params: dict[str, str]) -> dict[str, Any]:
                 f"Could not retrieve Mandi API data: {exc}",
                 status_code=status_code,
             ) from exc
-        except (requests.RequestException, ValueError) as exc:
+        except (requests.RequestException, TimeoutError, ValueError) as exc:
             raise DataSourceError(f"Could not retrieve Mandi API data: {exc}") from exc
 
     if (
@@ -127,8 +131,19 @@ def _post_json(url: str, payload: dict[str, Any], origin: str) -> Any:
 
 def _read_json(request: Request, timeout_seconds: float = 20) -> Any:
     try:
-        with urlopen(request, timeout=timeout_seconds) as response:
-            return json.loads(response.read().decode("utf-8"))
+        host = request.full_url.split("/", 3)[2]
+        service = (
+            "soil_health_card"
+            if "soilhealth" in host
+            else "other_data_source"
+        )
+        with outbound_http_call(service, fallback_on_error=True) as call:
+            with urlopen(
+                request,
+                timeout=remaining_timeout(timeout_seconds),
+            ) as response:
+                call["status"] = getattr(response, "status", 200)
+                return json.loads(response.read().decode("utf-8"))
     except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
         raise DataSourceError(f"Could not retrieve data from {request.full_url}: {exc}") from exc
 
@@ -138,15 +153,15 @@ def _cached(
     loader: Any,
     ttl_seconds: int = _CACHE_SECONDS,
 ) -> Any:
-    now = time.monotonic()
-    with _cache_lock:
-        cached = _cache.get(key)
-        if cached and now - cached[0] < ttl_seconds:
-            return cached[1]
-    value = loader()
-    with _cache_lock:
-        _cache[key] = (now, value)
-    return value
+    return _cache.get_or_load(
+        key,
+        loader,
+        ttl_seconds,
+        is_success=lambda value: not (
+            isinstance(value, dict) and bool(value.get("error"))
+        ),
+        negative_ttl_seconds=15,
+    )
 
 
 def _soil_graphql(query: str, variables: dict[str, Any] | None = None) -> Any:
@@ -225,22 +240,24 @@ def get_soil_health_summary(state_name: str, district_name: str) -> dict[str, An
 
 def _get_soilgrids_values(latitude: float, longitude: float) -> dict[str, Any]:
     try:
-        response = requests.get(
-            SOILGRIDS_URL,
-            params=[
-                ("lon", longitude),
-                ("lat", latitude),
-                ("property", "nitrogen"),
-                ("property", "phh2o"),
-                ("depth", "0-5cm"),
-                ("value", "mean"),
-            ],
-            headers={"Accept": "application/json"},
-            timeout=4,
-        )
-        response.raise_for_status()
-        payload = response.json()
-    except (requests.RequestException, ValueError) as exc:
+        with outbound_http_call("soilgrids", fallback_on_error=True) as call:
+            response = requests.get(
+                SOILGRIDS_URL,
+                params=[
+                    ("lon", longitude),
+                    ("lat", latitude),
+                    ("property", "nitrogen"),
+                    ("property", "phh2o"),
+                    ("depth", "0-5cm"),
+                    ("value", "mean"),
+                ],
+                headers={"Accept": "application/json"},
+                timeout=requests_timeout(5),
+            )
+            call["status"] = response.status_code
+            response.raise_for_status()
+            payload = response.json()
+    except (requests.RequestException, TimeoutError, ValueError) as exc:
         raise DataSourceError(f"Could not retrieve SoilGrids estimates: {exc}") from exc
     if not isinstance(payload, dict):
         raise DataSourceError("SoilGrids returned an invalid response.")
@@ -287,6 +304,10 @@ def _get_soilgrids_values(latitude: float, longitude: float) -> dict[str, Any]:
     return values
 
 
+def _soilgrids_cache_key(latitude: float, longitude: float) -> str:
+    return f"soilgrids:{latitude:.4f}:{longitude:.4f}"
+
+
 def get_soil_inputs(
     latitude: float,
     longitude: float,
@@ -300,22 +321,16 @@ def get_soil_inputs(
                 return {"values": {}, "error": str(exc)}
 
         soilgrids_result = _cached(
-            f"soilgrids:{latitude:.4f}:{longitude:.4f}",
+            _soilgrids_cache_key(latitude, longitude),
             load_soilgrids_result,
-            ttl_seconds=90,
+            ttl_seconds=7 * 24 * 60 * 60,
         )
         api_values = soilgrids_result["values"]
         soilgrids_error = soilgrids_result.get("error")
     except (KeyError, TypeError) as exc:
         raise DataSourceError(f"SoilGrids cache returned an invalid result: {exc}") from exc
 
-    try:
-        with MOCK_SOIL_PATH.open("r", encoding="utf-8") as soil_file:
-            mock_soil = json.load(soil_file)
-    except (OSError, json.JSONDecodeError) as exc:
-        raise DataSourceError(f"Could not load prototype mock soil values: {exc}") from exc
-    if not isinstance(mock_soil, dict):
-        raise DataSourceError("Prototype mock soil data must be a JSON object.")
+    mock_soil = _load_mock_soil(str(MOCK_SOIL_PATH))
 
     mock_values = None
     matched_location = None
@@ -382,11 +397,27 @@ def get_soil_inputs(
     }
 
 
-def _load_price_mappings() -> tuple[dict[str, str], dict[str, float], list[str], str]:
+@lru_cache(maxsize=8)
+def _load_mock_soil(path: str) -> dict[str, Any]:
     try:
-        with MANDI_MAPPING_PATH.open("r", encoding="utf-8") as mapping_file:
+        with Path(path).open("r", encoding="utf-8") as soil_file:
+            mock_soil = json.load(soil_file)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise DataSourceError(f"Could not load prototype mock soil values: {exc}") from exc
+    if not isinstance(mock_soil, dict):
+        raise DataSourceError("Prototype mock soil data must be a JSON object.")
+    return mock_soil
+
+
+@lru_cache(maxsize=8)
+def _load_price_mappings_cached(
+    mapping_path: str,
+    prices_path: str,
+) -> tuple[dict[str, str], dict[str, float], list[str], str]:
+    try:
+        with Path(mapping_path).open("r", encoding="utf-8") as mapping_file:
             mapping = json.load(mapping_file)
-        with MOCK_PRICES_PATH.open("r", encoding="utf-8") as prices_file:
+        with Path(prices_path).open("r", encoding="utf-8") as prices_file:
             mock_prices = json.load(prices_file)
     except (OSError, json.JSONDecodeError) as exc:
         raise DataSourceError(f"Could not load crop price mappings: {exc}") from exc
@@ -406,15 +437,27 @@ def _load_price_mappings() -> tuple[dict[str, str], dict[str, float], list[str],
     return commodities, mock_prices, supported_states, base_url.rstrip("/")
 
 
-def _load_ceda_crop_map() -> dict[str, dict[str, Any]]:
+def _load_price_mappings() -> tuple[dict[str, str], dict[str, float], list[str], str]:
+    return _load_price_mappings_cached(
+        str(MANDI_MAPPING_PATH),
+        str(MOCK_PRICES_PATH),
+    )
+
+
+@lru_cache(maxsize=8)
+def _load_ceda_crop_map_cached(path: str) -> dict[str, dict[str, Any]]:
     try:
-        with CEDA_CROP_MAP_PATH.open("r", encoding="utf-8") as map_file:
+        with Path(path).open("r", encoding="utf-8") as map_file:
             mapping = json.load(map_file)
     except (OSError, json.JSONDecodeError) as exc:
         raise DataSourceError(f"Could not load the finalized CEDA crop map: {exc}") from exc
     if not isinstance(mapping, dict):
         raise DataSourceError("The finalized CEDA crop map must be a JSON object.")
     return mapping
+
+
+def _load_ceda_crop_map() -> dict[str, dict[str, Any]]:
+    return _load_ceda_crop_map_cached(str(CEDA_CROP_MAP_PATH))
 
 
 def _load_ceda_price_cache() -> dict[str, dict[str, Any]]:
@@ -453,7 +496,10 @@ def _load_ceda_price_cache() -> dict[str, dict[str, Any]]:
 
 
 def initialize_price_cache() -> None:
-    """Load the offline price cache once during application startup."""
+    """Load offline prices and static lookup data once during application startup."""
+    _load_price_mappings()
+    _load_ceda_crop_map()
+    _load_mock_soil(str(MOCK_SOIL_PATH))
     _load_ceda_price_cache()
 
 

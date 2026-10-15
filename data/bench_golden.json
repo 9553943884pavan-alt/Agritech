@@ -1,0 +1,1797 @@
+[
+  {
+    "request": {
+      "location": "Nizamabad",
+      "budget": 125000,
+      "land_acres": 5
+    },
+    "response": {
+      "status": "success",
+      "regional_data": {
+        "nitrogen": 85.0,
+        "phosphorus": 42.0,
+        "potassium": 40.0,
+        "ph": 6.8,
+        "temperature": 29.0,
+        "rainfall": 15.0,
+        "humidity": 70.0
+      },
+      "resolved_location": "Nizamabad, Telangana",
+      "soil_health_summary": null,
+      "soil_health_source_error": "Could not retrieve data from https://soilhealth4.dac.gov.in/: <urlopen error recorded offline fixture: Soil Health Card unavailable>",
+      "soil_data_provenance": {
+        "nitrogen": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "nizamabad",
+          "note": "Illustrative fallback value; not measured soil data."
+        },
+        "phosphorus": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "nizamabad",
+          "note": "Illustrative fallback value; not measured soil data."
+        },
+        "potassium": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "nizamabad",
+          "note": "Illustrative fallback value; not measured soil data."
+        },
+        "ph": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "nizamabad",
+          "note": "Illustrative fallback value; not measured soil data."
+        }
+      },
+      "soil_source_details": {
+        "source": "ISRIC SoilGrids",
+        "api_values": {},
+        "api_error": "Could not retrieve SoilGrids estimates: recorded offline fixture: SoilGrids unavailable",
+        "mock_location_key": "nizamabad",
+        "note": "SoilGrids provides modelled pH estimates when available. Its total nitrogen estimate in g/kg is not compatible with the classifier's N feature, and the API does not provide its P or K features. Static mock values fill missing or incompatible features."
+      },
+      "soil_data_is_simulated": true,
+      "detected_season": "Kharif",
+      "models_used": {
+        "classifier": "RandomForest v1",
+        "regressor": "district-aware-yield-lookup-v3",
+        "market_prices": "TGK valid live quotes, CEDA cached historical prices, then labelled mock prices"
+      },
+      "top_crops_recommended": [
+        "muskmelon",
+        "coffee",
+        "maize"
+      ],
+      "classifier_reasoning": {
+        "method": "random_forest_shap",
+        "crops": [
+          {
+            "crop": "muskmelon",
+            "rank": 1,
+            "score": 0.41944444444444445,
+            "baseline_score": 0.0456742424242424,
+            "feature_contributions": [
+              {
+                "feature": "N",
+                "value": 85.0,
+                "shap_value": 0.04236125330404131
+              },
+              {
+                "feature": "P",
+                "value": 42.0,
+                "shap_value": -0.01173625854458178
+              },
+              {
+                "feature": "K",
+                "value": 40.0,
+                "shap_value": 0.009078451007406745
+              },
+              {
+                "feature": "temperature",
+                "value": 29.0,
+                "shap_value": 0.029750349475125667
+              },
+              {
+                "feature": "humidity",
+                "value": 70.0,
+                "shap_value": -0.0522453214268053
+              },
+              {
+                "feature": "ph",
+                "value": 6.8,
+                "shap_value": -0.003085628136226753
+              },
+              {
+                "feature": "rainfall",
+                "value": 15.0,
+                "shap_value": 0.35964735634124195
+              }
+            ]
+          },
+          {
+            "crop": "coffee",
+            "rank": 2,
+            "score": 0.15777777777777777,
+            "baseline_score": 0.045285984848484825,
+            "feature_contributions": [
+              {
+                "feature": "N",
+                "value": 85.0,
+                "shap_value": 0.06966037713824245
+              },
+              {
+                "feature": "P",
+                "value": 42.0,
+                "shap_value": -0.0008982473688002408
+              },
+              {
+                "feature": "K",
+                "value": 40.0,
+                "shap_value": 0.03666548969919719
+              },
+              {
+                "feature": "temperature",
+                "value": 29.0,
+                "shap_value": 0.003002229749850884
+              },
+              {
+                "feature": "humidity",
+                "value": 70.0,
+                "shap_value": 0.08466749696532846
+              },
+              {
+                "feature": "ph",
+                "value": 6.8,
+                "shap_value": 0.0056781320513137525
+              },
+              {
+                "feature": "rainfall",
+                "value": 15.0,
+                "shap_value": -0.08628368530583967
+              }
+            ]
+          },
+          {
+            "crop": "maize",
+            "rank": 3,
+            "score": 0.1188888888888889,
+            "baseline_score": 0.045708333333333316,
+            "feature_contributions": [
+              {
+                "feature": "N",
+                "value": 85.0,
+                "shap_value": 0.0850072775723012
+              },
+              {
+                "feature": "P",
+                "value": 42.0,
+                "shap_value": 0.0197820249513072
+              },
+              {
+                "feature": "K",
+                "value": 40.0,
+                "shap_value": -0.05430354999292664
+              },
+              {
+                "feature": "temperature",
+                "value": 29.0,
+                "shap_value": -0.023574641516110575
+              },
+              {
+                "feature": "humidity",
+                "value": 70.0,
+                "shap_value": 0.06793552824954957
+              },
+              {
+                "feature": "ph",
+                "value": 6.8,
+                "shap_value": 0.0008855649380366811
+              },
+              {
+                "feature": "rainfall",
+                "value": 15.0,
+                "shap_value": -0.022551648646601995
+              }
+            ]
+          }
+        ]
+      },
+      "optimized_crops": [
+        "muskmelon",
+        "maize"
+      ],
+      "optimizer_reasoning": {
+        "method": "linear_program_highs",
+        "objective": "maximize_net_profit",
+        "scope_note": "eligible_recommendations_only",
+        "constraints": {
+          "land_acres_available": 5.0,
+          "land_acres_used": 5.0,
+          "land_acres_remaining": 0.0,
+          "land_limit_reached": true,
+          "budget_available": 125000.0,
+          "budget_used": 86250.0,
+          "budget_remaining": 38750.0,
+          "budget_limit_reached": false,
+          "max_acres_per_crop": 3.25,
+          "crop_share_limit": 0.65
+        },
+        "crops": [
+          {
+            "crop": "Muskmelon",
+            "yield_tonnes_per_hectare": 10.6448,
+            "yield_tonnes_per_acre": 4.307891541885876,
+            "yield_quintals_per_acre": 43.07891541885876,
+            "price_per_quintal": 3289.25,
+            "cost_per_acre": 19000.0,
+            "revenue_per_acre": 141697.32254148117,
+            "profit_per_acre": 122697.32254148117,
+            "allocated_acres": 3.25,
+            "cost_invested": 61750.0,
+            "expected_revenue": 460516.2982598138,
+            "profit_contribution": 398766.2982598138,
+            "max_crop_acres": 3.25,
+            "crop_cap_reached": true,
+            "decision_note": "crop_limit"
+          },
+          {
+            "crop": "Maize",
+            "yield_tonnes_per_hectare": 5.0145,
+            "yield_tonnes_per_acre": 2.029340348037232,
+            "yield_quintals_per_acre": 20.29340348037232,
+            "price_per_quintal": 2275.5811,
+            "cost_per_acre": 14000.0,
+            "revenue_per_acre": 46179.28541460947,
+            "profit_per_acre": 32179.28541460947,
+            "allocated_acres": 1.75,
+            "cost_invested": 24500.0,
+            "expected_revenue": 80813.74947556657,
+            "profit_contribution": 56313.74947556657,
+            "max_crop_acres": 3.25,
+            "crop_cap_reached": false,
+            "decision_note": "positive_profit_mix"
+          }
+        ]
+      },
+      "ai_reasoning": {
+        "status": "not_configured",
+        "error_code": "missing_api_key"
+      },
+      "mandi_prices": {
+        "muskmelon": {
+          "status": "cached",
+          "price_per_quintal": 3289.25,
+          "price_rs_per_quintal": 3289.25,
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "proxy": false,
+          "is_simulated": false,
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "warning": null,
+          "commodity_id": 187,
+          "matched_name": "Karbuja (Musk Melon)",
+          "source_name": "CEDA Agmarknet"
+        },
+        "coffee": {
+          "status": "cached",
+          "price_per_quintal": 24983.33,
+          "price_rs_per_quintal": 24983.33,
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "proxy": false,
+          "is_simulated": false,
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "warning": null,
+          "commodity_id": 45,
+          "matched_name": "Coffee",
+          "source_name": "CEDA Agmarknet"
+        },
+        "maize": {
+          "status": "cached",
+          "price_per_quintal": 2275.58,
+          "price_rs_per_quintal": 2275.58,
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "proxy": false,
+          "is_simulated": false,
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "warning": null,
+          "commodity_id": 4,
+          "matched_name": "Maize",
+          "source_name": "CEDA Agmarknet"
+        }
+      },
+      "price_metadata": {
+        "muskmelon": {
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "proxy": false,
+          "is_simulated": false,
+          "warning": null
+        },
+        "coffee": {
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "proxy": false,
+          "is_simulated": false,
+          "warning": null
+        },
+        "maize": {
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "proxy": false,
+          "is_simulated": false,
+          "warning": null
+        }
+      },
+      "price_data_is_simulated": false,
+      "plan_is_simulated": true,
+      "profit_estimate_type": "simulated",
+      "allocations": [
+        {
+          "crop": "Muskmelon",
+          "allocated_acres": 3.25,
+          "percentage_of_land": 65.0,
+          "cost_invested": 61750.0,
+          "expected_yield_tonnes": 14.0,
+          "expected_revenue": 460516.3,
+          "profit_est": 398766.3
+        },
+        {
+          "crop": "Maize",
+          "allocated_acres": 1.75,
+          "percentage_of_land": 35.0,
+          "cost_invested": 24500.0,
+          "expected_yield_tonnes": 3.55,
+          "expected_revenue": 80813.75,
+          "profit_est": 56313.75
+        }
+      ],
+      "total_estimated_profit": 455080.05,
+      "utilized_budget": 86250.0,
+      "allocated_land_acres": 5.0,
+      "message": "SIMULATED PROTOTYPE PLAN: one or more soil or crop-price inputs are mock or stale; the displayed profit is not a real forecast. Used soil inputs and 90-day historical weather for Nizamabad, Telangana. The classifier recommended muskmelon, coffee, maize. Optimized mathematically using Linear Programming (SciPy HiGHS solver)."
+    }
+  },
+  {
+    "request": {
+      "location": "Pune",
+      "budget": 250000,
+      "land_acres": 10
+    },
+    "response": {
+      "status": "success",
+      "regional_data": {
+        "nitrogen": 60.0,
+        "phosphorus": 50.0,
+        "potassium": 45.0,
+        "ph": 6.5,
+        "temperature": 29.0,
+        "rainfall": 15.0,
+        "humidity": 70.0
+      },
+      "resolved_location": "Pune, Maharashtra",
+      "soil_health_summary": null,
+      "soil_health_source_error": "Could not retrieve data from https://soilhealth4.dac.gov.in/: <urlopen error recorded offline fixture: Soil Health Card unavailable>",
+      "soil_data_provenance": {
+        "nitrogen": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "pune",
+          "note": "Illustrative fallback value; not measured soil data."
+        },
+        "phosphorus": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "pune",
+          "note": "Illustrative fallback value; not measured soil data."
+        },
+        "potassium": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "pune",
+          "note": "Illustrative fallback value; not measured soil data."
+        },
+        "ph": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "pune",
+          "note": "Illustrative fallback value; not measured soil data."
+        }
+      },
+      "soil_source_details": {
+        "source": "ISRIC SoilGrids",
+        "api_values": {},
+        "api_error": "Could not retrieve SoilGrids estimates: recorded offline fixture: SoilGrids unavailable",
+        "mock_location_key": "pune",
+        "note": "SoilGrids provides modelled pH estimates when available. Its total nitrogen estimate in g/kg is not compatible with the classifier's N feature, and the API does not provide its P or K features. Static mock values fill missing or incompatible features."
+      },
+      "soil_data_is_simulated": true,
+      "detected_season": "Kharif",
+      "models_used": {
+        "classifier": "RandomForest v1",
+        "regressor": "district-aware-yield-lookup-v3",
+        "market_prices": "TGK valid live quotes, CEDA cached historical prices, then labelled mock prices"
+      },
+      "top_crops_recommended": [
+        "muskmelon",
+        "maize",
+        "coffee"
+      ],
+      "classifier_reasoning": {
+        "method": "random_forest_shap",
+        "crops": [
+          {
+            "crop": "muskmelon",
+            "rank": 1,
+            "score": 0.41,
+            "baseline_score": 0.0456742424242424,
+            "feature_contributions": [
+              {
+                "feature": "N",
+                "value": 60.0,
+                "shap_value": 0.017687116400533574
+              },
+              {
+                "feature": "P",
+                "value": 50.0,
+                "shap_value": -0.01821987646064234
+              },
+              {
+                "feature": "K",
+                "value": 45.0,
+                "shap_value": 0.024721554894973897
+              },
+              {
+                "feature": "temperature",
+                "value": 29.0,
+                "shap_value": 0.026133404690228706
+              },
+              {
+                "feature": "humidity",
+                "value": 70.0,
+                "shap_value": -0.04326640588043003
+              },
+              {
+                "feature": "ph",
+                "value": 6.5,
+                "shap_value": 0.0005269196834508041
+              },
+              {
+                "feature": "rainfall",
+                "value": 15.0,
+                "shap_value": 0.35674304424764297
+              }
+            ]
+          },
+          {
+            "crop": "maize",
+            "rank": 2,
+            "score": 0.12061111111111113,
+            "baseline_score": 0.045708333333333316,
+            "feature_contributions": [
+              {
+                "feature": "N",
+                "value": 60.0,
+                "shap_value": 0.09040493245164535
+              },
+              {
+                "feature": "P",
+                "value": 50.0,
+                "shap_value": 0.02053318060241121
+              },
+              {
+                "feature": "K",
+                "value": 45.0,
+                "shap_value": -0.06006536670940504
+              },
+              {
+                "feature": "temperature",
+                "value": 29.0,
+                "shap_value": -0.023009963929017982
+              },
+              {
+                "feature": "humidity",
+                "value": 70.0,
+                "shap_value": 0.07040605980017199
+              },
+              {
+                "feature": "ph",
+                "value": 6.5,
+                "shap_value": 0.0030383725348201336
+              },
+              {
+                "feature": "rainfall",
+                "value": 15.0,
+                "shap_value": -0.02640443697284806
+              }
+            ]
+          },
+          {
+            "crop": "coffee",
+            "rank": 3,
+            "score": 0.06722222222222221,
+            "baseline_score": 0.045285984848484825,
+            "feature_contributions": [
+              {
+                "feature": "N",
+                "value": 60.0,
+                "shap_value": 0.02383011466241188
+              },
+              {
+                "feature": "P",
+                "value": 50.0,
+                "shap_value": -0.004952748853111581
+              },
+              {
+                "feature": "K",
+                "value": 45.0,
+                "shap_value": 0.0053098305134615265
+              },
+              {
+                "feature": "temperature",
+                "value": 29.0,
+                "shap_value": -0.0037425294124659473
+              },
+              {
+                "feature": "humidity",
+                "value": 70.0,
+                "shap_value": 0.0569116839216697
+              },
+              {
+                "feature": "ph",
+                "value": 6.5,
+                "shap_value": 0.0008712841215405083
+              },
+              {
+                "feature": "rainfall",
+                "value": 15.0,
+                "shap_value": -0.056291397579768566
+              }
+            ]
+          }
+        ]
+      },
+      "optimized_crops": [
+        "muskmelon",
+        "maize"
+      ],
+      "optimizer_reasoning": {
+        "method": "linear_program_highs",
+        "objective": "maximize_net_profit",
+        "scope_note": "eligible_recommendations_only",
+        "constraints": {
+          "land_acres_available": 10.0,
+          "land_acres_used": 10.0,
+          "land_acres_remaining": 0.0,
+          "land_limit_reached": true,
+          "budget_available": 250000.0,
+          "budget_used": 172500.0,
+          "budget_remaining": 77500.0,
+          "budget_limit_reached": false,
+          "max_acres_per_crop": 6.5,
+          "crop_share_limit": 0.65
+        },
+        "crops": [
+          {
+            "crop": "Muskmelon",
+            "yield_tonnes_per_hectare": 10.6448,
+            "yield_tonnes_per_acre": 4.307891541885876,
+            "yield_quintals_per_acre": 43.07891541885876,
+            "price_per_quintal": 3289.25,
+            "cost_per_acre": 19000.0,
+            "revenue_per_acre": 141697.32254148117,
+            "profit_per_acre": 122697.32254148117,
+            "allocated_acres": 6.5,
+            "cost_invested": 123500.0,
+            "expected_revenue": 921032.5965196276,
+            "profit_contribution": 797532.5965196276,
+            "max_crop_acres": 6.5,
+            "crop_cap_reached": true,
+            "decision_note": "crop_limit"
+          },
+          {
+            "crop": "Maize",
+            "yield_tonnes_per_hectare": 2.7966,
+            "yield_tonnes_per_acre": 1.1317685147713477,
+            "yield_quintals_per_acre": 11.317685147713476,
+            "price_per_quintal": 2275.5811,
+            "cost_per_acre": 14000.0,
+            "revenue_per_acre": 25754.310417887493,
+            "profit_per_acre": 11754.310417887493,
+            "allocated_acres": 3.5,
+            "cost_invested": 49000.0,
+            "expected_revenue": 90140.08646260622,
+            "profit_contribution": 41140.086462606225,
+            "max_crop_acres": 6.5,
+            "crop_cap_reached": false,
+            "decision_note": "positive_profit_mix"
+          }
+        ]
+      },
+      "ai_reasoning": {
+        "status": "not_configured",
+        "error_code": "missing_api_key"
+      },
+      "mandi_prices": {
+        "muskmelon": {
+          "status": "cached",
+          "price_per_quintal": 3289.25,
+          "price_rs_per_quintal": 3289.25,
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "proxy": false,
+          "is_simulated": false,
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "warning": null,
+          "commodity_id": 187,
+          "matched_name": "Karbuja (Musk Melon)",
+          "source_name": "CEDA Agmarknet"
+        },
+        "maize": {
+          "status": "cached",
+          "price_per_quintal": 2275.58,
+          "price_rs_per_quintal": 2275.58,
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "proxy": false,
+          "is_simulated": false,
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "warning": null,
+          "commodity_id": 4,
+          "matched_name": "Maize",
+          "source_name": "CEDA Agmarknet"
+        },
+        "coffee": {
+          "status": "cached",
+          "price_per_quintal": 24983.33,
+          "price_rs_per_quintal": 24983.33,
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "proxy": false,
+          "is_simulated": false,
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "warning": null,
+          "commodity_id": 45,
+          "matched_name": "Coffee",
+          "source_name": "CEDA Agmarknet"
+        }
+      },
+      "price_metadata": {
+        "muskmelon": {
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "proxy": false,
+          "is_simulated": false,
+          "warning": null
+        },
+        "maize": {
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "proxy": false,
+          "is_simulated": false,
+          "warning": null
+        },
+        "coffee": {
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "proxy": false,
+          "is_simulated": false,
+          "warning": null
+        }
+      },
+      "price_data_is_simulated": false,
+      "plan_is_simulated": true,
+      "profit_estimate_type": "simulated",
+      "allocations": [
+        {
+          "crop": "Muskmelon",
+          "allocated_acres": 6.5,
+          "percentage_of_land": 65.0,
+          "cost_invested": 123500.0,
+          "expected_yield_tonnes": 28.0,
+          "expected_revenue": 921032.6,
+          "profit_est": 797532.6
+        },
+        {
+          "crop": "Maize",
+          "allocated_acres": 3.5,
+          "percentage_of_land": 35.0,
+          "cost_invested": 49000.0,
+          "expected_yield_tonnes": 3.96,
+          "expected_revenue": 90140.09,
+          "profit_est": 41140.09
+        }
+      ],
+      "total_estimated_profit": 838672.68,
+      "utilized_budget": 172500.0,
+      "allocated_land_acres": 10.0,
+      "message": "SIMULATED PROTOTYPE PLAN: one or more soil or crop-price inputs are mock or stale; the displayed profit is not a real forecast. Used soil inputs and 90-day historical weather for Pune, Maharashtra. The classifier recommended muskmelon, maize, coffee. Optimized mathematically using Linear Programming (SciPy HiGHS solver)."
+    }
+  },
+  {
+    "request": {
+      "location": "Ludhiana",
+      "budget": 180000,
+      "land_acres": 7.5
+    },
+    "response": {
+      "status": "success",
+      "regional_data": {
+        "nitrogen": 75.0,
+        "phosphorus": 40.0,
+        "potassium": 35.0,
+        "ph": 6.5,
+        "temperature": 29.0,
+        "rainfall": 15.0,
+        "humidity": 70.0
+      },
+      "resolved_location": "Ludhiana, Punjab",
+      "soil_health_summary": null,
+      "soil_health_source_error": "Could not retrieve data from https://soilhealth4.dac.gov.in/: <urlopen error recorded offline fixture: Soil Health Card unavailable>",
+      "soil_data_provenance": {
+        "nitrogen": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "default",
+          "note": "Illustrative fallback value; not measured soil data."
+        },
+        "phosphorus": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "default",
+          "note": "Illustrative fallback value; not measured soil data."
+        },
+        "potassium": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "default",
+          "note": "Illustrative fallback value; not measured soil data."
+        },
+        "ph": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "default",
+          "note": "Illustrative fallback value; not measured soil data."
+        }
+      },
+      "soil_source_details": {
+        "source": "ISRIC SoilGrids",
+        "api_values": {},
+        "api_error": "Could not retrieve SoilGrids estimates: recorded offline fixture: SoilGrids unavailable",
+        "mock_location_key": "default",
+        "note": "SoilGrids provides modelled pH estimates when available. Its total nitrogen estimate in g/kg is not compatible with the classifier's N feature, and the API does not provide its P or K features. Static mock values fill missing or incompatible features."
+      },
+      "soil_data_is_simulated": true,
+      "detected_season": "Kharif",
+      "models_used": {
+        "classifier": "RandomForest v1",
+        "regressor": "district-aware-yield-lookup-v3",
+        "market_prices": "TGK valid live quotes, CEDA cached historical prices, then labelled mock prices"
+      },
+      "top_crops_recommended": [
+        "muskmelon",
+        "coffee",
+        "maize"
+      ],
+      "classifier_reasoning": {
+        "method": "random_forest_shap",
+        "crops": [
+          {
+            "crop": "muskmelon",
+            "rank": 1,
+            "score": 0.395,
+            "baseline_score": 0.0456742424242424,
+            "feature_contributions": [
+              {
+                "feature": "N",
+                "value": 75.0,
+                "shap_value": 0.028199073170365095
+              },
+              {
+                "feature": "P",
+                "value": 40.0,
+                "shap_value": -0.010153428162646836
+              },
+              {
+                "feature": "K",
+                "value": 35.0,
+                "shap_value": -0.0001365053788995887
+              },
+              {
+                "feature": "temperature",
+                "value": 29.0,
+                "shap_value": 0.02406963672118652
+              },
+              {
+                "feature": "humidity",
+                "value": 70.0,
+                "shap_value": -0.04551705934649412
+              },
+              {
+                "feature": "ph",
+                "value": 6.5,
+                "shap_value": 0.0004041682744256874
+              },
+              {
+                "feature": "rainfall",
+                "value": 15.0,
+                "shap_value": 0.3524598722978207
+              }
+            ]
+          },
+          {
+            "crop": "coffee",
+            "rank": 2,
+            "score": 0.15888888888888889,
+            "baseline_score": 0.045285984848484825,
+            "feature_contributions": [
+              {
+                "feature": "N",
+                "value": 75.0,
+                "shap_value": 0.05243163355360739
+              },
+              {
+                "feature": "P",
+                "value": 40.0,
+                "shap_value": 0.017014111062497648
+              },
+              {
+                "feature": "K",
+                "value": 35.0,
+                "shap_value": 0.054256924109485655
+              },
+              {
+                "feature": "temperature",
+                "value": 29.0,
+                "shap_value": 0.0026564246328188634
+              },
+              {
+                "feature": "humidity",
+                "value": 70.0,
+                "shap_value": 0.0864416044093395
+              },
+              {
+                "feature": "ph",
+                "value": 6.5,
+                "shap_value": 0.0004217758667669552
+              },
+              {
+                "feature": "rainfall",
+                "value": 15.0,
+                "shap_value": -0.0996195695941118
+              }
+            ]
+          },
+          {
+            "crop": "maize",
+            "rank": 3,
+            "score": 0.13694444444444445,
+            "baseline_score": 0.045708333333333316,
+            "feature_contributions": [
+              {
+                "feature": "N",
+                "value": 75.0,
+                "shap_value": 0.0982371758759109
+              },
+              {
+                "feature": "P",
+                "value": 40.0,
+                "shap_value": 0.01360473856649905
+              },
+              {
+                "feature": "K",
+                "value": 35.0,
+                "shap_value": -0.048021878001083054
+              },
+              {
+                "feature": "temperature",
+                "value": 29.0,
+                "shap_value": -0.022628071447263486
+              },
+              {
+                "feature": "humidity",
+                "value": 70.0,
+                "shap_value": 0.07008863341203403
+              },
+              {
+                "feature": "ph",
+                "value": 6.5,
+                "shap_value": 0.0036436427662613576
+              },
+              {
+                "feature": "rainfall",
+                "value": 15.0,
+                "shap_value": -0.023688130061247883
+              }
+            ]
+          }
+        ]
+      },
+      "optimized_crops": [
+        "muskmelon",
+        "maize"
+      ],
+      "optimizer_reasoning": {
+        "method": "linear_program_highs",
+        "objective": "maximize_net_profit",
+        "scope_note": "eligible_recommendations_only",
+        "constraints": {
+          "land_acres_available": 7.5,
+          "land_acres_used": 7.5,
+          "land_acres_remaining": 0.0,
+          "land_limit_reached": true,
+          "budget_available": 180000.0,
+          "budget_used": 129400.0,
+          "budget_remaining": 50600.0,
+          "budget_limit_reached": false,
+          "max_acres_per_crop": 4.875,
+          "crop_share_limit": 0.65
+        },
+        "crops": [
+          {
+            "crop": "Muskmelon",
+            "yield_tonnes_per_hectare": 10.6448,
+            "yield_tonnes_per_acre": 4.307891541885876,
+            "yield_quintals_per_acre": 43.07891541885876,
+            "price_per_quintal": 3289.25,
+            "cost_per_acre": 19000.0,
+            "revenue_per_acre": 141697.32254148117,
+            "profit_per_acre": 122697.32254148117,
+            "allocated_acres": 4.88,
+            "cost_invested": 92720.0,
+            "expected_revenue": 691482.9340024281,
+            "profit_contribution": 598762.9340024281,
+            "max_crop_acres": 4.875,
+            "crop_cap_reached": true,
+            "decision_note": "crop_limit"
+          },
+          {
+            "crop": "Maize",
+            "yield_tonnes_per_hectare": 3.5,
+            "yield_tonnes_per_acre": 1.4164305949008498,
+            "yield_quintals_per_acre": 14.164305949008497,
+            "price_per_quintal": 2275.5811,
+            "cost_per_acre": 14000.0,
+            "revenue_per_acre": 32232.0269121813,
+            "profit_per_acre": 18232.0269121813,
+            "allocated_acres": 2.62,
+            "cost_invested": 36680.0,
+            "expected_revenue": 84447.910509915,
+            "profit_contribution": 47767.91050991501,
+            "max_crop_acres": 4.875,
+            "crop_cap_reached": false,
+            "decision_note": "positive_profit_mix"
+          }
+        ]
+      },
+      "ai_reasoning": {
+        "status": "not_configured",
+        "error_code": "missing_api_key"
+      },
+      "mandi_prices": {
+        "muskmelon": {
+          "status": "cached",
+          "price_per_quintal": 3289.25,
+          "price_rs_per_quintal": 3289.25,
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "proxy": false,
+          "is_simulated": false,
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "warning": null,
+          "commodity_id": 187,
+          "matched_name": "Karbuja (Musk Melon)",
+          "source_name": "CEDA Agmarknet"
+        },
+        "coffee": {
+          "status": "cached",
+          "price_per_quintal": 24983.33,
+          "price_rs_per_quintal": 24983.33,
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "proxy": false,
+          "is_simulated": false,
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "warning": null,
+          "commodity_id": 45,
+          "matched_name": "Coffee",
+          "source_name": "CEDA Agmarknet"
+        },
+        "maize": {
+          "status": "cached",
+          "price_per_quintal": 2275.58,
+          "price_rs_per_quintal": 2275.58,
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "proxy": false,
+          "is_simulated": false,
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "warning": null,
+          "commodity_id": 4,
+          "matched_name": "Maize",
+          "source_name": "CEDA Agmarknet"
+        }
+      },
+      "price_metadata": {
+        "muskmelon": {
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "proxy": false,
+          "is_simulated": false,
+          "warning": null
+        },
+        "coffee": {
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "proxy": false,
+          "is_simulated": false,
+          "warning": null
+        },
+        "maize": {
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "proxy": false,
+          "is_simulated": false,
+          "warning": null
+        }
+      },
+      "price_data_is_simulated": false,
+      "plan_is_simulated": true,
+      "profit_estimate_type": "simulated",
+      "allocations": [
+        {
+          "crop": "Muskmelon",
+          "allocated_acres": 4.88,
+          "percentage_of_land": 65.1,
+          "cost_invested": 92720.0,
+          "expected_yield_tonnes": 21.02,
+          "expected_revenue": 691482.93,
+          "profit_est": 598762.93
+        },
+        {
+          "crop": "Maize",
+          "allocated_acres": 2.62,
+          "percentage_of_land": 34.9,
+          "cost_invested": 36680.0,
+          "expected_yield_tonnes": 3.71,
+          "expected_revenue": 84447.91,
+          "profit_est": 47767.91
+        }
+      ],
+      "total_estimated_profit": 646530.84,
+      "utilized_budget": 129400.0,
+      "allocated_land_acres": 7.5,
+      "message": "SIMULATED PROTOTYPE PLAN: one or more soil or crop-price inputs are mock or stale; the displayed profit is not a real forecast. Used soil inputs and 90-day historical weather for Ludhiana, Punjab. The classifier recommended muskmelon, coffee, maize. Optimized mathematically using Linear Programming (SciPy HiGHS solver)."
+    }
+  },
+  {
+    "request": {
+      "location": "Guntur",
+      "budget": 90000,
+      "land_acres": 4
+    },
+    "response": {
+      "status": "success",
+      "regional_data": {
+        "nitrogen": 90.0,
+        "phosphorus": 45.0,
+        "potassium": 48.0,
+        "ph": 7.2,
+        "temperature": 29.0,
+        "rainfall": 15.0,
+        "humidity": 70.0
+      },
+      "resolved_location": "Guntur, Andhra Pradesh",
+      "soil_health_summary": null,
+      "soil_health_source_error": "Could not retrieve data from https://soilhealth4.dac.gov.in/: <urlopen error recorded offline fixture: Soil Health Card unavailable>",
+      "soil_data_provenance": {
+        "nitrogen": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "guntur",
+          "note": "Illustrative fallback value; not measured soil data."
+        },
+        "phosphorus": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "guntur",
+          "note": "Illustrative fallback value; not measured soil data."
+        },
+        "potassium": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "guntur",
+          "note": "Illustrative fallback value; not measured soil data."
+        },
+        "ph": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "guntur",
+          "note": "Illustrative fallback value; not measured soil data."
+        }
+      },
+      "soil_source_details": {
+        "source": "ISRIC SoilGrids",
+        "api_values": {},
+        "api_error": "Could not retrieve SoilGrids estimates: recorded offline fixture: SoilGrids unavailable",
+        "mock_location_key": "guntur",
+        "note": "SoilGrids provides modelled pH estimates when available. Its total nitrogen estimate in g/kg is not compatible with the classifier's N feature, and the API does not provide its P or K features. Static mock values fill missing or incompatible features."
+      },
+      "soil_data_is_simulated": true,
+      "detected_season": "Kharif",
+      "models_used": {
+        "classifier": "RandomForest v1",
+        "regressor": "district-aware-yield-lookup-v3",
+        "market_prices": "TGK valid live quotes, CEDA cached historical prices, then labelled mock prices"
+      },
+      "top_crops_recommended": [
+        "muskmelon",
+        "maize",
+        "coffee"
+      ],
+      "classifier_reasoning": {
+        "method": "random_forest_shap",
+        "crops": [
+          {
+            "crop": "muskmelon",
+            "rank": 1,
+            "score": 0.43944444444444436,
+            "baseline_score": 0.0456742424242424,
+            "feature_contributions": [
+              {
+                "feature": "N",
+                "value": 90.0,
+                "shap_value": 0.04463422889331804
+              },
+              {
+                "feature": "P",
+                "value": 45.0,
+                "shap_value": -0.01702593995697597
+              },
+              {
+                "feature": "K",
+                "value": 48.0,
+                "shap_value": 0.0288684226130723
+              },
+              {
+                "feature": "temperature",
+                "value": 29.0,
+                "shap_value": 0.03346908076172756
+              },
+              {
+                "feature": "humidity",
+                "value": 70.0,
+                "shap_value": -0.054985615587624125
+              },
+              {
+                "feature": "ph",
+                "value": 7.2,
+                "shap_value": -0.00469851485805614
+              },
+              {
+                "feature": "rainfall",
+                "value": 15.0,
+                "shap_value": 0.3635085401547402
+              }
+            ]
+          },
+          {
+            "crop": "maize",
+            "rank": 2,
+            "score": 0.11055555555555555,
+            "baseline_score": 0.045708333333333316,
+            "feature_contributions": [
+              {
+                "feature": "N",
+                "value": 90.0,
+                "shap_value": 0.08045648671645864
+              },
+              {
+                "feature": "P",
+                "value": 45.0,
+                "shap_value": 0.01985359909616336
+              },
+              {
+                "feature": "K",
+                "value": 48.0,
+                "shap_value": -0.053149660939915036
+              },
+              {
+                "feature": "temperature",
+                "value": 29.0,
+                "shap_value": -0.02067823812819687
+              },
+              {
+                "feature": "humidity",
+                "value": 70.0,
+                "shap_value": 0.06502673486581345
+              },
+              {
+                "feature": "ph",
+                "value": 7.2,
+                "shap_value": -0.008083762565160984
+              },
+              {
+                "feature": "rainfall",
+                "value": 15.0,
+                "shap_value": -0.0185779368229405
+              }
+            ]
+          },
+          {
+            "crop": "coffee",
+            "rank": 3,
+            "score": 0.10833333333333334,
+            "baseline_score": 0.045285984848484825,
+            "feature_contributions": [
+              {
+                "feature": "N",
+                "value": 90.0,
+                "shap_value": 0.060753131723016114
+              },
+              {
+                "feature": "P",
+                "value": 45.0,
+                "shap_value": -0.005732919758231154
+              },
+              {
+                "feature": "K",
+                "value": 48.0,
+                "shap_value": 0.004786329738929704
+              },
+              {
+                "feature": "temperature",
+                "value": 29.0,
+                "shap_value": -0.0013321124565152046
+              },
+              {
+                "feature": "humidity",
+                "value": 70.0,
+                "shap_value": 0.0732404707635372
+              },
+              {
+                "feature": "ph",
+                "value": 7.2,
+                "shap_value": 0.011855319312024167
+              },
+              {
+                "feature": "rainfall",
+                "value": 15.0,
+                "shap_value": -0.08052287083791242
+              }
+            ]
+          }
+        ]
+      },
+      "optimized_crops": [
+        "muskmelon",
+        "maize"
+      ],
+      "optimizer_reasoning": {
+        "method": "linear_program_highs",
+        "objective": "maximize_net_profit",
+        "scope_note": "eligible_recommendations_only",
+        "constraints": {
+          "land_acres_available": 4.0,
+          "land_acres_used": 4.0,
+          "land_acres_remaining": 0.0,
+          "land_limit_reached": true,
+          "budget_available": 90000.0,
+          "budget_used": 69000.0,
+          "budget_remaining": 21000.0,
+          "budget_limit_reached": false,
+          "max_acres_per_crop": 2.6,
+          "crop_share_limit": 0.65
+        },
+        "crops": [
+          {
+            "crop": "Muskmelon",
+            "yield_tonnes_per_hectare": 10.6448,
+            "yield_tonnes_per_acre": 4.307891541885876,
+            "yield_quintals_per_acre": 43.07891541885876,
+            "price_per_quintal": 3289.25,
+            "cost_per_acre": 19000.0,
+            "revenue_per_acre": 141697.32254148117,
+            "profit_per_acre": 122697.32254148117,
+            "allocated_acres": 2.6,
+            "cost_invested": 49400.0,
+            "expected_revenue": 368413.0386078511,
+            "profit_contribution": 319013.0386078511,
+            "max_crop_acres": 2.6,
+            "crop_cap_reached": true,
+            "decision_note": "crop_limit"
+          },
+          {
+            "crop": "Maize",
+            "yield_tonnes_per_hectare": 3.3106,
+            "yield_tonnes_per_acre": 1.3397814649939295,
+            "yield_quintals_per_acre": 13.397814649939296,
+            "price_per_quintal": 2275.5811,
+            "cost_per_acre": 14000.0,
+            "revenue_per_acre": 30487.813798704974,
+            "profit_per_acre": 16487.813798704974,
+            "allocated_acres": 1.4,
+            "cost_invested": 19600.0,
+            "expected_revenue": 42682.93931818696,
+            "profit_contribution": 23082.939318186964,
+            "max_crop_acres": 2.6,
+            "crop_cap_reached": false,
+            "decision_note": "positive_profit_mix"
+          }
+        ]
+      },
+      "ai_reasoning": {
+        "status": "not_configured",
+        "error_code": "missing_api_key"
+      },
+      "mandi_prices": {
+        "muskmelon": {
+          "status": "cached",
+          "price_per_quintal": 3289.25,
+          "price_rs_per_quintal": 3289.25,
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "proxy": false,
+          "is_simulated": false,
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "warning": null,
+          "commodity_id": 187,
+          "matched_name": "Karbuja (Musk Melon)",
+          "source_name": "CEDA Agmarknet"
+        },
+        "maize": {
+          "status": "cached",
+          "price_per_quintal": 2275.58,
+          "price_rs_per_quintal": 2275.58,
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "proxy": false,
+          "is_simulated": false,
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "warning": null,
+          "commodity_id": 4,
+          "matched_name": "Maize",
+          "source_name": "CEDA Agmarknet"
+        },
+        "coffee": {
+          "status": "cached",
+          "price_per_quintal": 24983.33,
+          "price_rs_per_quintal": 24983.33,
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "proxy": false,
+          "is_simulated": false,
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "warning": null,
+          "commodity_id": 45,
+          "matched_name": "Coffee",
+          "source_name": "CEDA Agmarknet"
+        }
+      },
+      "price_metadata": {
+        "muskmelon": {
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "proxy": false,
+          "is_simulated": false,
+          "warning": null
+        },
+        "maize": {
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "proxy": false,
+          "is_simulated": false,
+          "warning": null
+        },
+        "coffee": {
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "proxy": false,
+          "is_simulated": false,
+          "warning": null
+        }
+      },
+      "price_data_is_simulated": false,
+      "plan_is_simulated": true,
+      "profit_estimate_type": "simulated",
+      "allocations": [
+        {
+          "crop": "Muskmelon",
+          "allocated_acres": 2.6,
+          "percentage_of_land": 65.0,
+          "cost_invested": 49400.0,
+          "expected_yield_tonnes": 11.2,
+          "expected_revenue": 368413.04,
+          "profit_est": 319013.04
+        },
+        {
+          "crop": "Maize",
+          "allocated_acres": 1.4,
+          "percentage_of_land": 35.0,
+          "cost_invested": 19600.0,
+          "expected_yield_tonnes": 1.88,
+          "expected_revenue": 42682.94,
+          "profit_est": 23082.94
+        }
+      ],
+      "total_estimated_profit": 342095.98,
+      "utilized_budget": 69000.0,
+      "allocated_land_acres": 4.0,
+      "message": "SIMULATED PROTOTYPE PLAN: one or more soil or crop-price inputs are mock or stale; the displayed profit is not a real forecast. Used soil inputs and 90-day historical weather for Guntur, Andhra Pradesh. The classifier recommended muskmelon, maize, coffee. Optimized mathematically using Linear Programming (SciPy HiGHS solver)."
+    }
+  },
+  {
+    "request": {
+      "location": "Indore",
+      "budget": 300000,
+      "land_acres": 12
+    },
+    "response": {
+      "status": "success",
+      "regional_data": {
+        "nitrogen": 75.0,
+        "phosphorus": 40.0,
+        "potassium": 35.0,
+        "ph": 6.5,
+        "temperature": 29.0,
+        "rainfall": 15.0,
+        "humidity": 70.0
+      },
+      "resolved_location": "Indore, Madhya Pradesh",
+      "soil_health_summary": null,
+      "soil_health_source_error": "Could not retrieve data from https://soilhealth4.dac.gov.in/: <urlopen error recorded offline fixture: Soil Health Card unavailable>",
+      "soil_data_provenance": {
+        "nitrogen": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "default",
+          "note": "Illustrative fallback value; not measured soil data."
+        },
+        "phosphorus": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "default",
+          "note": "Illustrative fallback value; not measured soil data."
+        },
+        "potassium": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "default",
+          "note": "Illustrative fallback value; not measured soil data."
+        },
+        "ph": {
+          "source": "Prototype static mock JSON",
+          "status": "mock",
+          "location_key": "default",
+          "note": "Illustrative fallback value; not measured soil data."
+        }
+      },
+      "soil_source_details": {
+        "source": "ISRIC SoilGrids",
+        "api_values": {},
+        "api_error": "Could not retrieve SoilGrids estimates: recorded offline fixture: SoilGrids unavailable",
+        "mock_location_key": "default",
+        "note": "SoilGrids provides modelled pH estimates when available. Its total nitrogen estimate in g/kg is not compatible with the classifier's N feature, and the API does not provide its P or K features. Static mock values fill missing or incompatible features."
+      },
+      "soil_data_is_simulated": true,
+      "detected_season": "Kharif",
+      "models_used": {
+        "classifier": "RandomForest v1",
+        "regressor": "district-aware-yield-lookup-v3",
+        "market_prices": "TGK valid live quotes, CEDA cached historical prices, then labelled mock prices"
+      },
+      "top_crops_recommended": [
+        "muskmelon",
+        "coffee",
+        "maize"
+      ],
+      "classifier_reasoning": {
+        "method": "random_forest_shap",
+        "crops": [
+          {
+            "crop": "muskmelon",
+            "rank": 1,
+            "score": 0.395,
+            "baseline_score": 0.0456742424242424,
+            "feature_contributions": [
+              {
+                "feature": "N",
+                "value": 75.0,
+                "shap_value": 0.028199073170365095
+              },
+              {
+                "feature": "P",
+                "value": 40.0,
+                "shap_value": -0.010153428162646836
+              },
+              {
+                "feature": "K",
+                "value": 35.0,
+                "shap_value": -0.0001365053788995887
+              },
+              {
+                "feature": "temperature",
+                "value": 29.0,
+                "shap_value": 0.02406963672118652
+              },
+              {
+                "feature": "humidity",
+                "value": 70.0,
+                "shap_value": -0.04551705934649412
+              },
+              {
+                "feature": "ph",
+                "value": 6.5,
+                "shap_value": 0.0004041682744256874
+              },
+              {
+                "feature": "rainfall",
+                "value": 15.0,
+                "shap_value": 0.3524598722978207
+              }
+            ]
+          },
+          {
+            "crop": "coffee",
+            "rank": 2,
+            "score": 0.15888888888888889,
+            "baseline_score": 0.045285984848484825,
+            "feature_contributions": [
+              {
+                "feature": "N",
+                "value": 75.0,
+                "shap_value": 0.05243163355360739
+              },
+              {
+                "feature": "P",
+                "value": 40.0,
+                "shap_value": 0.017014111062497648
+              },
+              {
+                "feature": "K",
+                "value": 35.0,
+                "shap_value": 0.054256924109485655
+              },
+              {
+                "feature": "temperature",
+                "value": 29.0,
+                "shap_value": 0.0026564246328188634
+              },
+              {
+                "feature": "humidity",
+                "value": 70.0,
+                "shap_value": 0.0864416044093395
+              },
+              {
+                "feature": "ph",
+                "value": 6.5,
+                "shap_value": 0.0004217758667669552
+              },
+              {
+                "feature": "rainfall",
+                "value": 15.0,
+                "shap_value": -0.0996195695941118
+              }
+            ]
+          },
+          {
+            "crop": "maize",
+            "rank": 3,
+            "score": 0.13694444444444442,
+            "baseline_score": 0.045708333333333316,
+            "feature_contributions": [
+              {
+                "feature": "N",
+                "value": 75.0,
+                "shap_value": 0.0982371758759109
+              },
+              {
+                "feature": "P",
+                "value": 40.0,
+                "shap_value": 0.01360473856649905
+              },
+              {
+                "feature": "K",
+                "value": 35.0,
+                "shap_value": -0.048021878001083054
+              },
+              {
+                "feature": "temperature",
+                "value": 29.0,
+                "shap_value": -0.022628071447263486
+              },
+              {
+                "feature": "humidity",
+                "value": 70.0,
+                "shap_value": 0.07008863341203403
+              },
+              {
+                "feature": "ph",
+                "value": 6.5,
+                "shap_value": 0.0036436427662613576
+              },
+              {
+                "feature": "rainfall",
+                "value": 15.0,
+                "shap_value": -0.023688130061247883
+              }
+            ]
+          }
+        ]
+      },
+      "optimized_crops": [
+        "muskmelon",
+        "maize"
+      ],
+      "optimizer_reasoning": {
+        "method": "linear_program_highs",
+        "objective": "maximize_net_profit",
+        "scope_note": "eligible_recommendations_only",
+        "constraints": {
+          "land_acres_available": 12.0,
+          "land_acres_used": 7.8,
+          "land_acres_remaining": 4.2,
+          "land_limit_reached": false,
+          "budget_available": 300000.0,
+          "budget_used": 148200.0,
+          "budget_remaining": 151800.0,
+          "budget_limit_reached": false,
+          "max_acres_per_crop": 7.800000000000001,
+          "crop_share_limit": 0.65
+        },
+        "crops": [
+          {
+            "crop": "Muskmelon",
+            "yield_tonnes_per_hectare": 10.6448,
+            "yield_tonnes_per_acre": 4.307891541885876,
+            "yield_quintals_per_acre": 43.07891541885876,
+            "price_per_quintal": 3289.25,
+            "cost_per_acre": 19000.0,
+            "revenue_per_acre": 141697.32254148117,
+            "profit_per_acre": 122697.32254148117,
+            "allocated_acres": 7.8,
+            "cost_invested": 148200.0,
+            "expected_revenue": 1105239.1158235532,
+            "profit_contribution": 957039.1158235532,
+            "max_crop_acres": 7.800000000000001,
+            "crop_cap_reached": true,
+            "decision_note": "crop_limit"
+          },
+          {
+            "crop": "Maize",
+            "yield_tonnes_per_hectare": 1.2288,
+            "yield_tonnes_per_acre": 0.497288547146904,
+            "yield_quintals_per_acre": 4.9728854714690405,
+            "price_per_quintal": 2275.5811,
+            "cost_per_acre": 14000.0,
+            "revenue_per_acre": 11316.204191339537,
+            "profit_per_acre": -2683.795808660463,
+            "allocated_acres": 0.0,
+            "cost_invested": 0.0,
+            "expected_revenue": 0.0,
+            "profit_contribution": -0.0,
+            "max_crop_acres": 7.800000000000001,
+            "crop_cap_reached": false,
+            "decision_note": "nonpositive_margin"
+          }
+        ]
+      },
+      "ai_reasoning": {
+        "status": "not_configured",
+        "error_code": "missing_api_key"
+      },
+      "mandi_prices": {
+        "muskmelon": {
+          "status": "cached",
+          "price_per_quintal": 3289.25,
+          "price_rs_per_quintal": 3289.25,
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "proxy": false,
+          "is_simulated": false,
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "warning": null,
+          "commodity_id": 187,
+          "matched_name": "Karbuja (Musk Melon)",
+          "source_name": "CEDA Agmarknet"
+        },
+        "coffee": {
+          "status": "cached",
+          "price_per_quintal": 24983.33,
+          "price_rs_per_quintal": 24983.33,
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "proxy": false,
+          "is_simulated": false,
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "warning": null,
+          "commodity_id": 45,
+          "matched_name": "Coffee",
+          "source_name": "CEDA Agmarknet"
+        },
+        "maize": {
+          "status": "cached",
+          "price_per_quintal": 2275.58,
+          "price_rs_per_quintal": 2275.58,
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "proxy": false,
+          "is_simulated": false,
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "warning": null,
+          "commodity_id": 4,
+          "matched_name": "Maize",
+          "source_name": "CEDA Agmarknet"
+        }
+      },
+      "price_metadata": {
+        "muskmelon": {
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "proxy": false,
+          "is_simulated": false,
+          "warning": null
+        },
+        "coffee": {
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "proxy": false,
+          "is_simulated": false,
+          "warning": null
+        },
+        "maize": {
+          "source": "ceda_cached",
+          "as_of": "2025-10-30",
+          "label": "Historical mandi price, Oct 2025 (Agmarknet via CEDA)",
+          "proxy": false,
+          "is_simulated": false,
+          "warning": null
+        }
+      },
+      "price_data_is_simulated": false,
+      "plan_is_simulated": true,
+      "profit_estimate_type": "simulated",
+      "allocations": [
+        {
+          "crop": "Muskmelon",
+          "allocated_acres": 7.8,
+          "percentage_of_land": 65.0,
+          "cost_invested": 148200.0,
+          "expected_yield_tonnes": 33.6,
+          "expected_revenue": 1105239.12,
+          "profit_est": 957039.12
+        },
+        {
+          "crop": "Maize",
+          "allocated_acres": 0.0,
+          "percentage_of_land": 0.0,
+          "cost_invested": 0.0,
+          "expected_yield_tonnes": 0.0,
+          "expected_revenue": 0.0,
+          "profit_est": 0.0
+        }
+      ],
+      "total_estimated_profit": 957039.12,
+      "utilized_budget": 148200.0,
+      "allocated_land_acres": 7.8,
+      "message": "SIMULATED PROTOTYPE PLAN: one or more soil or crop-price inputs are mock or stale; the displayed profit is not a real forecast. Used soil inputs and 90-day historical weather for Indore, Madhya Pradesh. The classifier recommended muskmelon, coffee, maize. Optimized mathematically using Linear Programming (SciPy HiGHS solver)."
+    }
+  }
+]

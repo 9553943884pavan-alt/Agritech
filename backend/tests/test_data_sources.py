@@ -9,8 +9,7 @@ from backend import data_sources
 
 class DataSourceTests(unittest.TestCase):
     def setUp(self):
-        with data_sources._cache_lock:
-            data_sources._cache.clear()
+        data_sources._cache.clear()
         with data_sources._mandi_rate_limit_lock:
             data_sources._mandi_retry_after = 0
 
@@ -288,6 +287,8 @@ class DataSourceTests(unittest.TestCase):
                 "_get_mandi_result",
                 side_effect=data_sources.DataSourceError("Mandi API unavailable"),
             ),
+            patch.object(data_sources, "_load_ceda_crop_map", return_value={}),
+            patch.object(data_sources, "_load_ceda_price_cache", return_value={}),
         ):
             prices, details = data_sources.get_crop_prices(
                 ["rice"], state="Maharashtra", district="Nizamabad"
@@ -337,6 +338,8 @@ class DataSourceTests(unittest.TestCase):
                 ),
             ),
             patch.object(data_sources, "_get_mandi_result") as mandi_request,
+            patch.object(data_sources, "_load_ceda_crop_map", return_value={}),
+            patch.object(data_sources, "_load_ceda_price_cache", return_value={}),
         ):
             prices, details = data_sources.get_crop_prices(
                 ["rice"], state="Andhra Pradesh", district="Guntur"
